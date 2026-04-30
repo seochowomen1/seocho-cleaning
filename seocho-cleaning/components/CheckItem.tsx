@@ -10,6 +10,43 @@ interface Props {
   onChange: (result: CheckResult) => void;
 }
 
+const GRADE_COLORS: Record<
+  GradeId,
+  {
+    bar: string;
+    badgeBg: string;
+    badgeText: string;
+    cardBg: string;
+    cardBorder: string;
+    accent: string;
+  }
+> = {
+  A: {
+    bar: "bg-emerald-500",
+    badgeBg: "bg-emerald-500",
+    badgeText: "text-white",
+    cardBg: "bg-emerald-50/50",
+    cardBorder: "border-emerald-200",
+    accent: "emerald",
+  },
+  B: {
+    bar: "bg-amber-500",
+    badgeBg: "bg-amber-500",
+    badgeText: "text-white",
+    cardBg: "bg-amber-50/50",
+    cardBorder: "border-amber-200",
+    accent: "amber",
+  },
+  C: {
+    bar: "bg-rose-500",
+    badgeBg: "bg-rose-500",
+    badgeText: "text-white",
+    cardBg: "bg-rose-50/50",
+    cardBorder: "border-rose-300",
+    accent: "rose",
+  },
+};
+
 export default function CheckItem({ item, index, value, onChange }: Props) {
   const [photoPreview, setPhotoPreview] = useState<string | null>(
     value?.photoBase64 || null
@@ -56,87 +93,88 @@ export default function CheckItem({ item, index, value, onChange }: Props) {
   const grade = value?.grade;
   const isC = grade === "C";
   const isDone = !!grade;
-
-  // 카드 외곽 색상 (선택된 등급에 따라)
-  const cardBorder = isDone
-    ? grade === "A"
-      ? "border-emerald-200 bg-emerald-50/40"
-      : grade === "B"
-      ? "border-amber-200 bg-amber-50/40"
-      : "border-red-300 bg-red-50/40"
-    : "border-gray-200 bg-white";
+  const palette = grade ? GRADE_COLORS[grade] : null;
 
   return (
     <div
-      className={`rounded-2xl border-2 p-4 transition-colors ${cardBorder}`}
+      className={`relative rounded-3xl border-2 p-4 pl-5 shadow-soft transition-all ${
+        palette
+          ? `${palette.cardBorder} ${palette.cardBg}`
+          : "border-ink-100 bg-white hover:border-ink-200"
+      }`}
     >
-      {/* 헤더: 번호 + 제목 + 완료 표시 */}
-      <div className="flex items-start gap-3 mb-3">
+      {/* 좌측 컬러 액센트 바 */}
+      <span
+        className={`absolute left-0 top-4 bottom-4 w-1 rounded-r-full ${
+          palette ? palette.bar : "bg-ink-200"
+        }`}
+        aria-hidden
+      />
+
+      {/* 헤더 */}
+      <div className="flex items-start gap-3 mb-4">
         <div
-          className={`shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
+          className={`shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-sm font-extrabold ${
             isDone
-              ? grade === "A"
-                ? "bg-emerald-500 text-white"
-                : grade === "B"
-                ? "bg-amber-500 text-white"
-                : "bg-red-500 text-white"
-              : "bg-gray-200 text-gray-600"
+              ? `${palette!.badgeBg} ${palette!.badgeText}`
+              : "bg-ink-100 text-ink-500"
           }`}
         >
           {isDone ? grade : index ?? ""}
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-base font-bold text-gray-900 leading-tight">
+        <div className="flex-1 min-w-0 pt-0.5">
+          <p className="text-base font-bold text-ink-900 leading-tight tracking-tight">
             {item.name}
           </p>
-          <p className="mt-1 text-sm text-gray-600 leading-relaxed">
+          <p className="mt-1 text-[13px] text-ink-600 leading-relaxed">
             {item.description}
           </p>
         </div>
       </div>
 
-      {/* 등급 버튼 */}
+      {/* 등급 버튼 그룹 */}
       <div className="grid grid-cols-3 gap-2">
         <GradeButton
           grade="A"
           label="양호"
-          subLabel="A"
+          desc="정리 깔끔"
           selected={grade === "A"}
           onClick={() => setGrade("A")}
         />
         <GradeButton
           grade="B"
           label="보통"
-          subLabel="B"
+          desc="가볍게 정리"
           selected={grade === "B"}
           onClick={() => setGrade("B")}
         />
         <GradeButton
           grade="C"
           label="조치"
-          subLabel="C"
+          desc="사무실 보고"
           selected={grade === "C"}
           onClick={() => setGrade("C")}
         />
       </div>
 
+      {/* C 등급 입력 영역 */}
       {isC && (
         <div className="mt-4 space-y-3 animate-pop-in">
           <div>
-            <label className="block text-xs font-semibold text-red-700 mb-1.5">
-              어떤 문제인가요? *
+            <label className="block text-[11px] font-bold tracking-wider text-rose-700 uppercase mb-1.5">
+              어떤 문제인가요? <span className="text-rose-500">*</span>
             </label>
             <input
               type="text"
               placeholder="예) 책상 두 개가 흐트러져 있음"
               value={value?.note || ""}
               onChange={(e) => setNote(e.target.value)}
-              className="w-full h-12 px-4 rounded-xl border-2 border-red-300 bg-white text-base focus:outline-none focus:ring-4 focus:ring-red-100 focus:border-red-500"
+              className="w-full h-12 px-4 rounded-2xl border-2 border-rose-200 bg-white text-[15px] focus:outline-none focus:ring-4 focus:ring-rose-100 focus:border-rose-400 placeholder:text-ink-400"
             />
           </div>
 
           {!photoPreview ? (
-            <label className="flex items-center justify-center gap-2 h-12 rounded-xl border-2 border-dashed border-red-300 bg-red-50 text-red-700 text-sm font-semibold cursor-pointer hover:bg-red-100 transition-colors">
+            <label className="flex items-center justify-center gap-2 h-12 rounded-2xl border-2 border-dashed border-rose-300 bg-white text-rose-700 text-sm font-semibold cursor-pointer hover:bg-rose-50 transition-colors">
               <svg
                 className="w-5 h-5"
                 fill="none"
@@ -166,17 +204,17 @@ export default function CheckItem({ item, index, value, onChange }: Props) {
               />
             </label>
           ) : (
-            <div className="relative rounded-xl overflow-hidden border-2 border-red-200">
+            <div className="relative rounded-2xl overflow-hidden border-2 border-rose-200">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={photoPreview}
                 alt="첨부 사진"
-                className="w-full max-h-56 object-cover"
+                className="w-full max-h-60 object-cover"
               />
               <button
                 type="button"
                 onClick={removePhoto}
-                className="absolute top-2 right-2 w-9 h-9 rounded-full bg-black/70 hover:bg-black/85 text-white flex items-center justify-center"
+                className="absolute top-2 right-2 w-9 h-9 rounded-full bg-ink-900/75 hover:bg-ink-900 text-white flex items-center justify-center transition-colors"
                 aria-label="사진 제거"
               >
                 ✕
@@ -192,49 +230,57 @@ export default function CheckItem({ item, index, value, onChange }: Props) {
 function GradeButton({
   grade,
   label,
-  subLabel,
+  desc,
   selected,
   onClick,
 }: {
   grade: GradeId;
   label: string;
-  subLabel: string;
+  desc: string;
   selected: boolean;
   onClick: () => void;
 }) {
   const styles: Record<GradeId, { sel: string; unsel: string }> = {
     A: {
-      sel: "bg-emerald-500 border-emerald-500 text-white shadow-md shadow-emerald-100",
+      sel: "bg-emerald-500 border-emerald-500 text-white shadow-md shadow-emerald-200",
       unsel:
-        "bg-white border-gray-300 text-gray-700 hover:border-emerald-300 hover:bg-emerald-50",
+        "bg-white border-ink-200 text-ink-700 hover:border-emerald-300 hover:bg-emerald-50/50",
     },
     B: {
-      sel: "bg-amber-500 border-amber-500 text-white shadow-md shadow-amber-100",
+      sel: "bg-amber-500 border-amber-500 text-white shadow-md shadow-amber-200",
       unsel:
-        "bg-white border-gray-300 text-gray-700 hover:border-amber-300 hover:bg-amber-50",
+        "bg-white border-ink-200 text-ink-700 hover:border-amber-300 hover:bg-amber-50/50",
     },
     C: {
-      sel: "bg-red-500 border-red-500 text-white shadow-md shadow-red-100",
+      sel: "bg-rose-500 border-rose-500 text-white shadow-md shadow-rose-200",
       unsel:
-        "bg-white border-gray-300 text-gray-700 hover:border-red-300 hover:bg-red-50",
+        "bg-white border-ink-200 text-ink-700 hover:border-rose-300 hover:bg-rose-50/50",
     },
   };
-
   const style = selected ? styles[grade].sel : styles[grade].unsel;
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`grade-btn h-14 rounded-xl border-2 font-bold flex flex-col items-center justify-center gap-0 ${style}`}
+      className={`grade-btn h-16 rounded-2xl border-2 font-bold flex flex-col items-center justify-center ${style}`}
     >
-      <span className="text-base leading-tight">{label}</span>
+      <div className="flex items-center gap-1">
+        <span className="text-base leading-none">{label}</span>
+        <span
+          className={`text-[10px] tracking-widest ${
+            selected ? "text-white/85" : "text-ink-400"
+          }`}
+        >
+          {grade}
+        </span>
+      </div>
       <span
-        className={`text-[10px] tracking-widest ${
-          selected ? "text-white/80" : "text-gray-400"
+        className={`text-[10px] mt-1 ${
+          selected ? "text-white/80" : "text-ink-400"
         }`}
       >
-        {subLabel}
+        {desc}
       </span>
     </button>
   );
@@ -261,7 +307,6 @@ async function compressImage(
           width = (width * maxSize) / height;
           height = maxSize;
         }
-
         const canvas = document.createElement("canvas");
         canvas.width = width;
         canvas.height = height;
