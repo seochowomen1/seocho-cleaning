@@ -36,11 +36,12 @@ function setupSheets() {
       "비고",         // H: note
       "사진URL",      // I: photoUrl
       "제출시각",     // J: submittedAt
+      "제출ID",       // K: submissionId
     ]);
     sub.setFrozenRows(1);
 
     // 헤더 스타일링
-    const header = sub.getRange(1, 1, 1, 10);
+    const header = sub.getRange(1, 1, 1, 11);
     header.setBackground("#D9E2F3").setFontWeight("bold");
 
     // 열 너비
@@ -54,6 +55,7 @@ function setupSheets() {
     sub.setColumnWidth(8, 200);  // 비고
     sub.setColumnWidth(9, 200);  // 사진URL
     sub.setColumnWidth(10, 160); // 제출시각
+    sub.setColumnWidth(11, 220); // 제출ID
 
     // 등급 열 조건부 서식 (A=초록, B=노랑, C=빨강)
     const gradeRange = sub.getRange("G2:G");
@@ -90,6 +92,7 @@ function setupProperties() {
   // 기본값 설정 (값이 없을 때만)
   const defaults = {
     ADMIN_KEY: existing.ADMIN_KEY || "REPLACE_WITH_STRONG_RANDOM_STRING",
+    SUBMIT_SECRET: existing.SUBMIT_SECRET || "REPLACE_WITH_ANOTHER_STRONG_RANDOM_STRING",
     NOTIFY_EMAIL: existing.NOTIFY_EMAIL || "your-email@example.com",
     PHOTO_FOLDER_ID: existing.PHOTO_FOLDER_ID || "",
     SOLAPI_API_KEY: existing.SOLAPI_API_KEY || "",
@@ -107,6 +110,7 @@ function setupProperties() {
   Logger.log("스크립트 속성 초기화 완료");
   Logger.log("프로젝트 설정 → 스크립트 속성에서 실제 값으로 수정하세요:");
   Logger.log("  - ADMIN_KEY: 관리자 키 (강한 랜덤 문자열)");
+  Logger.log("  - SUBMIT_SECRET: 제출 API 공유 시크릿 (Vercel SUBMIT_SECRET 와 동일)");
   Logger.log("  - NOTIFY_EMAIL: 알림 받을 이메일");
   Logger.log("  - PHOTO_FOLDER_ID: Google Drive 사진 폴더 ID (선택)");
   Logger.log("  - SOLAPI_*: 알림톡 API 정보 (선택, 카톡 알림 사용 시)");

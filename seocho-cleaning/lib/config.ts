@@ -107,12 +107,14 @@ export type Grade = {
 
 export type CheckResult = {
   itemId: string;
+  itemName: string; // 서버 매핑 의존 제거를 위해 클라이언트에서 함께 전송
   grade: GradeId;
   note?: string;
   photoBase64?: string; // C 등급일 때만
 };
 
 export type Submission = {
+  submissionId: string; // 클라이언트가 발급하는 UUID (중복 제출 방지)
   workerId: string;
   workerName: string;
   timeSlotId: TimeSlot["id"];

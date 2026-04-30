@@ -16,6 +16,15 @@ function doPost(e) {
   try {
     const body = JSON.parse(e.postData.contents);
 
+    // 공유 시크릿 검증 (Vercel API 라우트만 알고 있는 값)
+    const expectedSecret = PropertiesService.getScriptProperties().getProperty("SUBMIT_SECRET");
+    if (!expectedSecret) {
+      return jsonResponse({ success: false, error: "서버 설정 오류 (SUBMIT_SECRET 미설정)" });
+    }
+    if (body.secret !== expectedSecret) {
+      return jsonResponse({ success: false, error: "권한 없음" });
+    }
+
     if (body.action === "submit") {
       return jsonResponse(handleSubmit(body.payload));
     }
@@ -59,10 +68,20 @@ function handleSubmit(submission) {
   const sheet = ss.getSheetByName(SHEET_SUBMISSIONS);
   if (!sheet) throw new Error("Submissions 시트가 없습니다. setupSheets()를 먼저 실행하세요.");
 
+  if (!submission.results || submission.results.length === 0) {
+    return { success: false, error: "results 가 비어 있습니다." };
+  }
+
   const lock = LockService.getScriptLock();
   lock.waitLock(10000);
 
   try {
+    // 멱등성: 동일 submissionId 가 이미 저장돼 있으면 바로 성공 응답 (중복 제출/재시도 방지)
+    const submissionId = String(submission.submissionId || "");
+    if (submissionId && isSubmissionIdRecorded(sheet, submissionId)) {
+      return { success: true, duplicated: true, rowsAdded: 0, cCount: 0 };
+    }
+
     const now = new Date();
     const submittedAt = submission.submittedAt || now.toISOString();
 
@@ -74,7 +93,7 @@ function handleSubmit(submission) {
     const cResults = []; // 알림용
 
     submission.results.forEach((r) => {
-      const itemName = getItemName(r.itemId);
+      const itemName = r.itemName || getItemName(r.itemId);
       let photoUrl = "";
 
       if (r.grade === "C" && r.photoBase64 && photoFolderId) {
@@ -100,6 +119,7 @@ function handleSubmit(submission) {
         r.note || "",
         photoUrl,
         submittedAt,
+        submissionId,
       ]);
 
       if (r.grade === "C") {
@@ -134,6 +154,17 @@ function handleSubmit(submission) {
   }
 }
 
+// 동일 submissionId 가 이미 시트에 저장되어 있는지 확인 (K열 = 제출ID)
+function isSubmissionIdRecorded(sheet, submissionId) {
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return false;
+  const ids = sheet.getRange(2, 11, lastRow - 1, 1).getValues();
+  for (let i = 0; i < ids.length; i++) {
+    if (String(ids[i][0]) === submissionId) return true;
+  }
+  return false;
+}
+
 // ============================================================
 // 사진 업로드 (base64 → Drive)
 // ============================================================
@@ -165,7 +196,7 @@ function handleStats(days) {
   const lastRow = sheet.getLastRow();
   if (lastRow < 2) return { success: true, data: emptyStats() };
 
-  const values = sheet.getRange(2, 1, lastRow - 1, 10).getValues();
+  const values = sheet.getRange(2, 1, lastRow - 1, 11).getValues();
 
   // 기간 필터링
   const cutoff = new Date();
@@ -174,11 +205,13 @@ function handleStats(days) {
 
   const filtered = values.filter((row) => row[0] && String(row[0]) >= cutoffStr);
 
-  // 같은 (date + timeSlot + workerId)끼리 묶기
+  // submissionId 로 묶기 (없는 옛날 행은 date|timeSlot|workerId 로 fallback)
   const grouped = {};
   filtered.forEach((row) => {
-    const [date, timeSlotLabel, workerId, workerName, itemId, itemName, grade, note, photoUrl, submittedAt] = row;
-    const key = `${date}|${timeSlotLabel}|${workerId}`;
+    const [date, timeSlotLabel, workerId, workerName, itemId, itemName, grade, note, photoUrl, submittedAt, submissionId] = row;
+    const key = submissionId
+      ? String(submissionId)
+      : `${date}|${timeSlotLabel}|${workerId}`;
     if (!grouped[key]) {
       grouped[key] = {
         date,
@@ -236,11 +269,9 @@ function jsonResponse(obj) {
   );
 }
 
+// 항상 한국 표준시(KST) 기준 날짜 문자열을 반환 (GAS 프로젝트 타임존 영향 제거)
 function formatDateLocal(d) {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
+  return Utilities.formatDate(d, "Asia/Seoul", "yyyy-MM-dd");
 }
 
 function logError(where, err) {
@@ -255,7 +286,7 @@ function logError(where, err) {
   }
 }
 
-// 점검 항목 ID → 이름 (백엔드에서도 이름 매핑 - 프론트와 동기화 필요)
+// 클라이언트가 itemName 을 함께 보내지 않은 경우의 fallback (구버전 호환)
 function getItemName(itemId) {
   const map = {
     desk: "강의용 책상",

@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const APPS_SCRIPT_URL = process.env.APPS_SCRIPT_URL;
+const SUBMIT_SECRET = process.env.SUBMIT_SECRET;
 
 export async function POST(req: NextRequest) {
-  if (!APPS_SCRIPT_URL) {
+  if (!APPS_SCRIPT_URL || !SUBMIT_SECRET) {
     return NextResponse.json(
-      { success: false, error: "서버 설정 오류 (APPS_SCRIPT_URL 미설정)" },
+      { success: false, error: "서버 설정 오류 (APPS_SCRIPT_URL/SUBMIT_SECRET 미설정)" },
       { status: 500 }
     );
   }
@@ -13,11 +14,11 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    // Apps Script Web App으로 전달
+    // Apps Script Web App으로 전달 (서버측에서만 알고 있는 공유 시크릿 첨부)
     const res = await fetch(APPS_SCRIPT_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "submit", payload: body }),
+      body: JSON.stringify({ action: "submit", secret: SUBMIT_SECRET, payload: body }),
       // Apps Script는 첫 호출이 느릴 수 있어 타임아웃 여유
       signal: AbortSignal.timeout(30000),
     });

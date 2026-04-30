@@ -18,9 +18,14 @@ export default function CheckItem({ item, value, onChange }: Props) {
   const setGrade = (grade: GradeId) => {
     if (grade !== "C") {
       setPhotoPreview(null);
-      onChange({ itemId: item.id, grade });
+      onChange({ itemId: item.id, itemName: item.name, grade });
     } else {
-      onChange({ itemId: item.id, grade, note: value?.note || "" });
+      onChange({
+        itemId: item.id,
+        itemName: item.name,
+        grade,
+        note: value?.note || "",
+      });
     }
   };
 

@@ -24,12 +24,14 @@ export default function HomePage() {
   const [status, setStatus] = useState<Status>("idle");
   const [errorMsg, setErrorMsg] = useState<string>("");
   const [now, setNow] = useState<Date | null>(null);
+  const [submissionId, setSubmissionId] = useState<string>("");
 
-  // 클라이언트에서만 시간 감지 (SSR hydration 이슈 방지)
+  // 클라이언트에서만 시간 감지 + 제출 ID 발급 (SSR hydration 이슈 방지)
   useEffect(() => {
     const n = new Date();
     setNow(n);
     setTimeSlot(detectTimeSlot(n));
+    setSubmissionId(generateSubmissionId());
   }, []);
 
   const updateResult = (r: CheckResult) => {
@@ -59,6 +61,7 @@ export default function HomePage() {
     if (!worker) return;
 
     const submission: Submission = {
+      submissionId,
       workerId: worker.id,
       workerName: worker.name,
       timeSlotId: timeSlot.id,
@@ -254,4 +257,11 @@ export default function HomePage() {
       </div>
     </div>
   );
+}
+
+function generateSubmissionId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 }
