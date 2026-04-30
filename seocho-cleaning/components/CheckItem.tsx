@@ -150,7 +150,7 @@ export default function CheckItem({ item, index, value, onChange }: Props) {
         />
         <GradeButton
           grade="C"
-          label="조치"
+          label="조치필요"
           desc="사무실 보고"
           selected={grade === "C"}
           onClick={() => setGrade("C")}
@@ -166,7 +166,7 @@ export default function CheckItem({ item, index, value, onChange }: Props) {
             </label>
             <input
               type="text"
-              placeholder="예) 책상 두 개가 흐트러져 있음"
+              placeholder="예) 바닥에 이물질이 지워지지 않음"
               value={value?.note || ""}
               onChange={(e) => setNote(e.target.value)}
               className="w-full h-12 px-4 rounded-2xl border-2 border-rose-200 bg-white text-[15px] focus:outline-none focus:ring-4 focus:ring-rose-100 focus:border-rose-400 placeholder:text-ink-400"

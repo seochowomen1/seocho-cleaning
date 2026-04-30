@@ -13,14 +13,14 @@ function sendCAlertEmail(submission, cResults) {
     return;
   }
 
-  const subject = `[청소점검] C 등급 발생 - ${submission.date} ${submission.timeSlotLabel}`;
+  const subject = `[청소점검] 조치필요 발생 - ${submission.date} ${submission.timeSlotLabel}`;
 
   let body = `청소 점검에서 조치가 필요한 항목이 발견되었습니다.\n\n`;
   body += `▣ 점검 정보\n`;
   body += `  · 일자: ${submission.date}\n`;
   body += `  · 시간대: ${submission.timeSlotLabel}\n`;
   body += `  · 점검자: ${submission.workerName}\n\n`;
-  body += `▣ C 등급 항목 (${cResults.length}건)\n`;
+  body += `▣ 조치필요 항목 (${cResults.length}건)\n`;
 
   cResults.forEach((c, i) => {
     body += `\n  ${i + 1}. ${c.itemName}\n`;
@@ -34,13 +34,13 @@ function sendCAlertEmail(submission, cResults) {
 
   // HTML 버전
   let htmlBody = `<div style="font-family: 'Malgun Gothic', sans-serif; max-width: 600px;">`;
-  htmlBody += `<h2 style="color: #c92a2a; border-bottom: 2px solid #c92a2a; padding-bottom: 8px;">청소 점검 - 조치 필요 항목</h2>`;
+  htmlBody += `<h2 style="color: #c92a2a; border-bottom: 2px solid #c92a2a; padding-bottom: 8px;">청소 점검 - 조치필요 항목</h2>`;
   htmlBody += `<table style="border-collapse: collapse; margin: 16px 0;">`;
   htmlBody += `<tr><td style="padding: 6px 12px; color: #666;">일자</td><td style="padding: 6px 12px;"><b>${submission.date}</b></td></tr>`;
   htmlBody += `<tr><td style="padding: 6px 12px; color: #666;">시간대</td><td style="padding: 6px 12px;"><b>${submission.timeSlotLabel}</b></td></tr>`;
   htmlBody += `<tr><td style="padding: 6px 12px; color: #666;">점검자</td><td style="padding: 6px 12px;"><b>${submission.workerName}</b></td></tr>`;
   htmlBody += `</table>`;
-  htmlBody += `<h3 style="margin-top: 24px;">C 등급 항목 (${cResults.length}건)</h3>`;
+  htmlBody += `<h3 style="margin-top: 24px;">조치필요 항목 (${cResults.length}건)</h3>`;
 
   cResults.forEach((c, i) => {
     htmlBody += `<div style="background: #fff5f5; border-left: 4px solid #e24b4a; padding: 12px 16px; margin-bottom: 8px;">`;
@@ -82,7 +82,7 @@ function sendCAlertKakao(submission, cResults) {
   // 솔라피 SMS 발송 예시 (알림톡은 별도 템플릿 등록 필요)
   // 여기서는 가장 간단한 SMS 형태로 구현
   try {
-    const text = `[청소점검 C등급]\n${submission.date} ${submission.timeSlotLabel}\n점검자: ${submission.workerName}\n\n${cResults.map(c => `· ${c.itemName}${c.note ? ` - ${c.note}` : ""}`).join("\n")}`;
+    const text = `[청소점검 조치필요]\n${submission.date} ${submission.timeSlotLabel}\n점검자: ${submission.workerName}\n\n${cResults.map(c => `· ${c.itemName}${c.note ? ` - ${c.note}` : ""}`).join("\n")}`;
 
     const date = new Date().toISOString();
     const salt = Utilities.getUuid().replace(/-/g, "").substring(0, 16);

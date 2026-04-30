@@ -29,9 +29,20 @@ export default function HomePage() {
   useEffect(() => {
     const n = new Date();
     setNow(n);
-    setTimeSlot(detectTimeSlot(n));
+    const detected = detectTimeSlot(n);
+    setTimeSlot(detected);
+    // 시간대 담당 근로자를 자동으로 선택
+    const defaultWorker = WORKERS.find((w) => w.timeSlotId === detected.id);
+    if (defaultWorker) setWorkerId(defaultWorker.id);
     setSubmissionId(generateSubmissionId());
   }, []);
+
+  // 시간대 변경 시 해당 시간대 담당자로 자동 전환
+  const changeTimeSlot = (slot: TimeSlot) => {
+    setTimeSlot(slot);
+    const matched = WORKERS.find((w) => w.timeSlotId === slot.id);
+    if (matched) setWorkerId(matched.id);
+  };
 
   const updateResult = (r: CheckResult) => {
     setResults((prev) => ({ ...prev, [r.itemId]: r }));
@@ -185,58 +196,107 @@ export default function HomePage() {
                   </svg>
                 </summary>
                 <div className="mt-3 grid grid-cols-3 gap-2">
-                  {TIME_SLOTS.map((slot) => (
-                    <button
-                      key={slot.id}
-                      type="button"
-                      onClick={() => setTimeSlot(slot)}
-                      className={`h-11 rounded-xl text-xs font-semibold transition-all ${
-                        slot.id === timeSlot.id
-                          ? "bg-brand-600 text-white shadow-glow"
-                          : "bg-ink-50 text-ink-700 hover:bg-ink-100"
-                      }`}
-                    >
-                      {slot.label}
-                    </button>
-                  ))}
+                  {TIME_SLOTS.map((slot) => {
+                    const slotWorker = WORKERS.find(
+                      (w) => w.timeSlotId === slot.id
+                    );
+                    return (
+                      <button
+                        key={slot.id}
+                        type="button"
+                        onClick={() => changeTimeSlot(slot)}
+                        className={`h-auto py-2 rounded-xl text-xs font-semibold transition-all flex flex-col items-center gap-0.5 ${
+                          slot.id === timeSlot.id
+                            ? "bg-brand-600 text-white shadow-glow"
+                            : "bg-ink-50 text-ink-700 hover:bg-ink-100"
+                        }`}
+                      >
+                        <span>{slot.label}</span>
+                        {slotWorker && (
+                          <span
+                            className={`text-[10px] font-medium ${
+                              slot.id === timeSlot.id
+                                ? "text-white/80"
+                                : "text-ink-500"
+                            }`}
+                          >
+                            {slotWorker.name}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </details>
             </div>
           )}
 
-          {/* 점검자 선택 (칩 스타일) */}
-          <div className="bg-white rounded-3xl shadow-card border border-ink-100 p-5 animate-slide-up">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-bold text-ink-900">
-                점검자 <span className="text-rose-500">*</span>
-              </h2>
-              {workerId && (
-                <span className="text-[11px] text-emerald-700 font-semibold flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                  선택됨
-                </span>
-              )}
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {WORKERS.map((w) => {
-                const selected = workerId === w.id;
-                return (
-                  <button
-                    key={w.id}
-                    type="button"
-                    onClick={() => setWorkerId(w.id)}
-                    className={`grade-btn px-4 h-11 rounded-full text-sm font-semibold border-2 transition-all ${
-                      selected
-                        ? "bg-brand-600 border-brand-600 text-white shadow-glow"
-                        : "bg-white border-ink-200 text-ink-700 hover:border-brand-300 hover:bg-brand-50"
-                    }`}
-                  >
-                    {w.name}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          {/* 점검자 (시간대 자동 매칭) */}
+          {(() => {
+            const currentWorker = WORKERS.find((w) => w.id === workerId);
+            return (
+              <div className="bg-white rounded-3xl shadow-card border border-ink-100 p-5 animate-slide-up">
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-sm font-bold text-ink-900">점검자</h2>
+                  <span className="text-[11px] text-emerald-700 font-semibold flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    자동 매칭됨
+                  </span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 text-white flex items-center justify-center text-lg font-bold shadow-soft">
+                    {currentWorker?.name.slice(0, 1) || "?"}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-lg font-bold text-ink-900 tracking-tight">
+                      {currentWorker?.name || "—"}
+                      <span className="text-sm text-ink-500 font-normal ml-1">
+                        님
+                      </span>
+                    </p>
+                    <p className="text-[11px] text-ink-500 mt-0.5">
+                      {timeSlot?.label} 담당
+                    </p>
+                  </div>
+                </div>
+
+                <details className="mt-3">
+                  <summary className="text-[11px] text-ink-500 cursor-pointer select-none hover:text-ink-700 inline-flex items-center gap-1">
+                    다른 점검자가 대신 점검하나요?
+                    <svg
+                      className="w-3 h-3"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2.5}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </summary>
+                  <div className="mt-2 grid grid-cols-3 gap-2">
+                    {WORKERS.map((w) => (
+                      <button
+                        key={w.id}
+                        type="button"
+                        onClick={() => setWorkerId(w.id)}
+                        className={`h-11 rounded-xl text-xs font-semibold transition-all ${
+                          workerId === w.id
+                            ? "bg-brand-600 text-white shadow-glow"
+                            : "bg-ink-50 text-ink-700 hover:bg-ink-100"
+                        }`}
+                      >
+                        {w.name}
+                      </button>
+                    ))}
+                  </div>
+                </details>
+              </div>
+            );
+          })()}
 
           {/* 진행률 + 항목 도트 */}
           <div className="bg-white rounded-3xl shadow-card border border-ink-100 p-5 animate-slide-up">
@@ -305,7 +365,7 @@ export default function HomePage() {
                   특이사항이 비어 있습니다
                 </p>
                 <p className="text-rose-700 mt-0.5">
-                  C 등급 항목은 어떤 문제인지 짧게라도 입력해주세요.
+                  조치필요 항목은 어떤 문제인지 짧게라도 입력해주세요.
                 </p>
               </div>
             </div>
@@ -351,7 +411,7 @@ export default function HomePage() {
               </div>
               {cCount > 0 && (
                 <p className="text-[11px] font-semibold text-rose-600">
-                  ⚠ C 등급 {cCount}건은 즉시 알림 발송
+                  ⚠ 조치필요 {cCount}건은 즉시 알림 발송
                 </p>
               )}
             </div>
@@ -449,7 +509,7 @@ function SuccessScreen({
 
         {cCount > 0 && (
           <div className="mt-5 rounded-2xl bg-rose-50 border border-rose-200 p-4 text-sm text-rose-800 text-left">
-            <p className="font-bold mb-0.5">조치 필요 {cCount}건</p>
+            <p className="font-bold mb-0.5">조치필요 {cCount}건</p>
             <p className="text-rose-700">
               사무실에 자동으로 알림이 전송되었습니다.
             </p>

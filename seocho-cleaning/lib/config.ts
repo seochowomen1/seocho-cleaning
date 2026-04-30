@@ -7,13 +7,12 @@ export const ORG_INFO = {
   department: "사업경영팀",
 };
 
-// 시니어 근로자 명단 (실제 명단으로 교체)
+// 시니어 근로자 명단 (시간대별 담당자)
 // id는 변경하지 마세요 (데이터 추적용)
 export const WORKERS: Worker[] = [
-  { id: "w001", name: "근로자1" },
-  { id: "w002", name: "근로자2" },
-  { id: "w003", name: "근로자3" },
-  // 필요한 만큼 추가하세요
+  { id: "w001", name: "김성만", timeSlotId: "morning" },
+  { id: "w002", name: "배정열", timeSlotId: "afternoon" },
+  { id: "w003", name: "조숙임", timeSlotId: "evening" },
 ];
 
 // 시간대 정의
@@ -69,9 +68,9 @@ export const CHECKLIST_ITEMS: ChecklistItem[] = [
 
 // 평가 등급 정의
 export const GRADES: Grade[] = [
-  { id: "A", label: "A 양호",  color: "green",  description: "정리·청결 양호" },
-  { id: "B", label: "B 보통",  color: "amber",  description: "본인 정리 후 체크" },
-  { id: "C", label: "C 조치",  color: "red",    description: "사무실 보고 필요" },
+  { id: "A", label: "양호",     color: "green",  description: "정리·청결 양호" },
+  { id: "B", label: "보통",     color: "amber",  description: "본인 정리 후 체크" },
+  { id: "C", label: "조치필요", color: "red",    description: "사무실 보고 필요" },
 ];
 
 // ============================================
@@ -81,6 +80,8 @@ export const GRADES: Grade[] = [
 export type Worker = {
   id: string;
   name: string;
+  /** 이 근로자가 기본 담당하는 시간대 */
+  timeSlotId: TimeSlot["id"];
 };
 
 export type TimeSlot = {

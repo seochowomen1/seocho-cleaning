@@ -260,7 +260,7 @@ export default function AdminPage() {
               onChange={(e) => setFilterC(e.target.checked)}
               className="w-4 h-4"
             />
-            <span className="text-sm font-medium text-ink-700">C 등급만</span>
+            <span className="text-sm font-medium text-ink-700">조치필요만</span>
           </label>
 
           <div className="ml-auto flex gap-2">
@@ -320,10 +320,10 @@ export default function AdminPage() {
                 progress={data.completionRate}
               />
               <KpiCard
-                label="C 등급"
+                label="조치필요"
                 value={data.cCount}
                 unit="건"
-                hint={data.cCount > 0 ? "조치 필요" : "이상 없음"}
+                hint={data.cCount > 0 ? "확인 요망" : "이상 없음"}
                 tone={data.cCount > 0 ? "rose" : "ink"}
               />
               <KpiCard
@@ -363,7 +363,7 @@ export default function AdminPage() {
                     <div className="grid grid-cols-3 gap-2 mt-4">
                       <DistLegend color="emerald" label="양호" grade="A" count={gradeDist.A} total={gradeDist.total} />
                       <DistLegend color="amber" label="보통" grade="B" count={gradeDist.B} total={gradeDist.total} />
-                      <DistLegend color="rose" label="조치" grade="C" count={gradeDist.C} total={gradeDist.total} />
+                      <DistLegend color="rose" label="조치필요" grade="C" count={gradeDist.C} total={gradeDist.total} />
                     </div>
                   </>
                 )}
@@ -594,7 +594,7 @@ function SubmissionRow({ submission }: { submission: Submission }) {
               {submission.workerName}
               {submission.hasC && (
                 <span className="ml-2 inline-flex items-center px-1.5 h-5 rounded-md bg-rose-100 text-rose-700 text-[10px] font-bold align-middle">
-                  C
+                  조치필요
                 </span>
               )}
             </p>
