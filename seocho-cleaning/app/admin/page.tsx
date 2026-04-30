@@ -28,14 +28,21 @@ type StatsData = {
 export default function AdminPage() {
   const [adminKey, setAdminKey] = useState("");
   const [authed, setAuthed] = useState(false);
+  const [previewMode, setPreviewMode] = useState(false);
   const [data, setData] = useState<StatsData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [days, setDays] = useState(7);
   const [filterC, setFilterC] = useState(false);
   const [filterWorker, setFilterWorker] = useState("");
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   useEffect(() => {
+    if (localStorage.getItem("adminPreview") === "1") {
+      setPreviewMode(true);
+      setAuthed(true);
+      return;
+    }
     const saved = localStorage.getItem("adminKey");
     if (saved) {
       setAdminKey(saved);
@@ -44,9 +51,15 @@ export default function AdminPage() {
   }, []);
 
   useEffect(() => {
-    if (authed) loadData();
+    if (!authed) return;
+    if (previewMode) {
+      setData(generateMockData(days));
+      setLastUpdated(new Date());
+    } else {
+      loadData();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authed, days]);
+  }, [authed, days, previewMode]);
 
   const loadData = async () => {
     setLoading(true);
@@ -58,6 +71,7 @@ export default function AdminPage() {
       const json = await res.json();
       if (!res.ok || !json.success) throw new Error(json.error || "조회 실패");
       setData(json.data);
+      setLastUpdated(new Date());
     } catch (err) {
       setError(err instanceof Error ? err.message : "오류");
       if (err instanceof Error && err.message.includes("권한")) {
@@ -75,10 +89,18 @@ export default function AdminPage() {
     setAuthed(true);
   };
 
+  const enterPreview = () => {
+    localStorage.setItem("adminPreview", "1");
+    setPreviewMode(true);
+    setAuthed(true);
+  };
+
   const logout = () => {
     localStorage.removeItem("adminKey");
+    localStorage.removeItem("adminPreview");
     setAdminKey("");
     setAuthed(false);
+    setPreviewMode(false);
     setData(null);
   };
 
@@ -229,6 +251,42 @@ export default function AdminPage() {
           {error && (
             <p className="mt-3 text-xs text-rose-600 text-center">{error}</p>
           )}
+
+          <div className="my-5 flex items-center gap-3">
+            <div className="flex-1 h-px bg-ink-100" />
+            <span className="text-[10px] tracking-widest text-ink-400 font-semibold">
+              OR
+            </span>
+            <div className="flex-1 h-px bg-ink-100" />
+          </div>
+
+          <button
+            onClick={enterPreview}
+            className="w-full h-11 rounded-xl border-2 border-dashed border-ink-200 hover:border-brand-300 hover:bg-brand-50/40 text-ink-700 hover:text-brand-700 text-sm font-semibold transition-colors inline-flex items-center justify-center gap-1.5"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+              />
+            </svg>
+            샘플 데이터로 미리보기
+          </button>
+          <p className="text-[10px] text-ink-400 text-center mt-2">
+            실제 데이터 없이 디자인 확인용
+          </p>
         </div>
       </div>
     );
@@ -237,27 +295,41 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-ink-50">
       {/* ===== 상단 바 ===== */}
-      <header className="bg-white border-b border-ink-100 sticky top-0 z-10">
+      <header className="bg-white/85 backdrop-blur border-b border-ink-100 sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-5 md:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center text-white text-sm font-bold">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center text-white text-sm font-bold shadow-glow">
               SC
             </div>
-            <div>
-              <h1 className="text-base font-bold text-ink-900 tracking-tight leading-none">
-                청소 점검 대시보드
-              </h1>
-              <p className="text-[11px] text-ink-500 mt-0.5">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <h1 className="text-base font-bold text-ink-900 tracking-tight leading-none truncate">
+                  청소 점검 대시보드
+                </h1>
+                {previewMode && (
+                  <span className="inline-flex items-center gap-1 px-2 h-5 rounded-md bg-amber-100 text-amber-800 text-[10px] font-bold tracking-wider uppercase">
+                    Preview
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] text-ink-500 mt-1 leading-none">
                 서초여성가족플라자 서초센터
               </p>
             </div>
           </div>
-          <button
-            onClick={logout}
-            className="text-xs text-ink-500 hover:text-ink-900 px-3 py-1.5 rounded-lg hover:bg-ink-50 font-medium"
-          >
-            로그아웃
-          </button>
+          <div className="flex items-center gap-1">
+            {lastUpdated && (
+              <span className="hidden sm:inline-block text-[11px] text-ink-400 px-2">
+                {formatRelativeTime(lastUpdated)} 갱신
+              </span>
+            )}
+            <button
+              onClick={logout}
+              className="text-xs text-ink-500 hover:text-ink-900 px-3 py-1.5 rounded-lg hover:bg-ink-50 font-medium"
+            >
+              {previewMode ? "나가기" : "로그아웃"}
+            </button>
+          </div>
         </div>
       </header>
 
@@ -345,6 +417,50 @@ export default function AdminPage() {
 
         {data && (
           <>
+            {/* ===== 미리보기 모드 안내 ===== */}
+            {previewMode && (
+              <div className="mb-4 rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50 to-amber-100/50 p-4 flex items-center gap-3">
+                <div className="w-9 h-9 shrink-0 rounded-xl bg-amber-500 text-white flex items-center justify-center">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-amber-900">
+                    미리보기 모드
+                  </p>
+                  <p className="text-xs text-amber-800">
+                    실제 데이터가 아닌 샘플로 디자인을 미리 보고 있습니다.
+                    실제 데이터를 보려면 우상단 &quot;나가기&quot; 후 관리자 키로 로그인하세요.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* ===== 미제출 알림 배너 ===== */}
+            {(() => {
+              const missed = todayStatus.filter((s) => s.state === "missed");
+              if (missed.length === 0) return null;
+              return (
+                <div className="mb-4 rounded-2xl border border-rose-200 bg-gradient-to-r from-rose-50 to-rose-100/50 p-4 flex items-center gap-3 animate-slide-up">
+                  <div className="w-9 h-9 shrink-0 rounded-xl bg-rose-500 text-white flex items-center justify-center font-extrabold">
+                    !
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-rose-900">
+                      오늘 미제출 {missed.length}건
+                    </p>
+                    <p className="text-xs text-rose-800">
+                      {missed
+                        .map((m) => `${m.slot.label} (${m.worker?.name})`)
+                        .join(", ")}
+                    </p>
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* ===== 오늘 현황 (3개 시간대 컴플라이언스) ===== */}
             <TodayStatusPanel slots={todayStatus} />
 
@@ -521,22 +637,44 @@ function KpiCard({
   progress?: number;
 }) {
   const toneMap = {
-    brand: { bar: "bg-brand-500", text: "text-brand-600" },
-    emerald: { bar: "bg-emerald-500", text: "text-emerald-600" },
-    rose: { bar: "bg-rose-500", text: "text-rose-600" },
-    ink: { bar: "bg-ink-300", text: "text-ink-500" },
-    violet: { bar: "bg-violet-500", text: "text-violet-600" },
+    brand: {
+      bar: "bg-brand-500",
+      text: "text-brand-600",
+      bg: "from-brand-50/60 to-white",
+    },
+    emerald: {
+      bar: "bg-emerald-500",
+      text: "text-emerald-600",
+      bg: "from-emerald-50/60 to-white",
+    },
+    rose: {
+      bar: "bg-rose-500",
+      text: "text-rose-600",
+      bg: "from-rose-50/70 to-white",
+    },
+    ink: {
+      bar: "bg-ink-300",
+      text: "text-ink-500",
+      bg: "from-ink-50 to-white",
+    },
+    violet: {
+      bar: "bg-violet-500",
+      text: "text-violet-600",
+      bg: "from-violet-50/60 to-white",
+    },
   };
   const t = toneMap[tone];
 
   return (
-    <div className="bg-white rounded-2xl shadow-soft border border-ink-100 p-4 relative overflow-hidden">
+    <div
+      className={`relative overflow-hidden rounded-2xl shadow-soft border border-ink-100 p-4 bg-gradient-to-br ${t.bg} hover:shadow-card transition-shadow`}
+    >
       <div className={`absolute left-0 top-0 bottom-0 w-1 ${t.bar}`} />
       <p className="text-[11px] font-semibold tracking-wider text-ink-500 uppercase">
         {label}
       </p>
       <div className="flex items-baseline gap-1 mt-2">
-        <p className="text-3xl font-extrabold text-ink-900 leading-none tracking-tight">
+        <p className="text-[28px] md:text-3xl font-extrabold text-ink-900 leading-none tracking-tight tabular-nums">
           {value}
         </p>
         {unit && (
@@ -544,7 +682,7 @@ function KpiCard({
         )}
       </div>
       {progress !== undefined && (
-        <div className="mt-3 h-1 bg-ink-100 rounded-full overflow-hidden">
+        <div className="mt-3 h-1.5 bg-white/60 rounded-full overflow-hidden">
           <div
             className={`h-full ${t.bar} transition-all duration-500`}
             style={{ width: `${Math.min(progress, 100)}%` }}
@@ -963,4 +1101,118 @@ function SubmissionRow({ submission }: { submission: Submission }) {
       )}
     </li>
   );
+}
+
+// ============================================
+// 헬퍼
+// ============================================
+function formatRelativeTime(d: Date): string {
+  const diffSec = Math.floor((Date.now() - d.getTime()) / 1000);
+  if (diffSec < 60) return "방금";
+  if (diffSec < 3600) return `${Math.floor(diffSec / 60)}분 전`;
+  if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}시간 전`;
+  return `${d.getMonth() + 1}/${d.getDate()}`;
+}
+
+// ============================================
+// 샘플 데이터 생성 (미리보기 모드)
+// ============================================
+function generateMockData(days: number): StatsData {
+  const today = new Date();
+  const items = [
+    { id: "desk", name: "강의용 책상" },
+    { id: "chair", name: "강의용 의자" },
+    { id: "dust", name: "이물질·먼지" },
+    { id: "floor", name: "바닥 상태" },
+    { id: "ac_light", name: "냉난방·전등" },
+    { id: "healing_room", name: "힐링·마루강의실" },
+    { id: "hallway", name: "복도·출입구" },
+    { id: "trash", name: "쓰레기통" },
+  ];
+  const slots = [
+    { label: "09:00 ~ 12:00", worker: "김성만", endHour: 12 },
+    { label: "12:00 ~ 15:00", worker: "배정열", endHour: 15 },
+    { label: "15:00 ~ 18:00", worker: "조숙임", endHour: 18 },
+  ];
+
+  // 결정적이지만 그럴듯한 등급 분포 (대부분 A, 가끔 B/C)
+  const pickGrade = (seed: number): "A" | "B" | "C" => {
+    const r = (Math.sin(seed) * 10000) % 1;
+    const v = Math.abs(r);
+    if (v < 0.08) return "C";
+    if (v < 0.22) return "B";
+    return "A";
+  };
+  const cNotes: Record<string, string[]> = {
+    desk: ["책상 두 개가 흐트러져 있음", "다리 흔들림 1개 발견"],
+    chair: ["의자 하나 부서짐", "정리 안 됨"],
+    dust: ["창틀 먼지 쌓임"],
+    floor: ["바닥에 이물질이 지워지지 않음", "물기 자국"],
+    ac_light: ["에어컨 끄지 않음", "전등 1개 점등"],
+    healing_room: ["거울 얼룩"],
+    hallway: ["복도 종이박스 방치"],
+    trash: ["쓰레기통 가득 참 (비움 완료)", "분리수거 미흡"],
+  };
+
+  const submissions: Submission[] = [];
+  let seed = 1;
+
+  for (let dayOffset = days - 1; dayOffset >= 0; dayOffset--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - dayOffset);
+    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
+      2,
+      "0"
+    )}-${String(d.getDate()).padStart(2, "0")}`;
+
+    for (const slot of slots) {
+      // 오늘은 시간이 지난 슬롯만 (예정 슬롯 만들기)
+      if (dayOffset === 0 && today.getHours() < slot.endHour) continue;
+      // 가끔 미제출 (시뮬레이션) — 단, 오늘은 다 채워야 미제출 마킹 시연
+      if (dayOffset > 0 && Math.abs(Math.sin(seed * 7.3)) < 0.06) {
+        seed++;
+        continue;
+      }
+
+      const results = items.map((it) => {
+        seed++;
+        const grade = pickGrade(seed);
+        const note =
+          grade === "C"
+            ? cNotes[it.id]?.[seed % (cNotes[it.id]?.length || 1)] || ""
+            : undefined;
+        return {
+          itemId: it.id,
+          itemName: it.name,
+          grade,
+          note,
+          photoUrl: undefined,
+        };
+      });
+
+      const submittedAt = new Date(d);
+      submittedAt.setHours(slot.endHour - 1, 30, 0, 0);
+
+      submissions.push({
+        date: dateStr,
+        timeSlotLabel: slot.label,
+        workerName: slot.worker,
+        submittedAt: submittedAt.toISOString(),
+        results,
+        hasC: results.some((r) => r.grade === "C"),
+      });
+    }
+  }
+
+  const cCount = submissions.reduce(
+    (acc, s) => acc + s.results.filter((r) => r.grade === "C").length,
+    0
+  );
+
+  return {
+    totalSubmissions: submissions.length,
+    completionRate: Math.round((submissions.length / (days * 3)) * 100),
+    cCount,
+    submissions,
+  };
 }
