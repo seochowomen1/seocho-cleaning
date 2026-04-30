@@ -41,12 +41,18 @@ export default function HomePage() {
   const completedCount = Object.keys(results).length;
   const totalCount = CHECKLIST_ITEMS.length;
   const allComplete = completedCount === totalCount;
+  const progress = Math.round((completedCount / totalCount) * 100);
 
   const cWithoutNote = useMemo(() => {
     return Object.values(results).filter(
       (r) => r.grade === "C" && (!r.note || r.note.trim() === "")
     );
   }, [results]);
+
+  const cCount = useMemo(
+    () => Object.values(results).filter((r) => r.grade === "C").length,
+    [results]
+  );
 
   const canSubmit =
     workerId !== "" &&
@@ -94,11 +100,11 @@ export default function HomePage() {
   // 제출 완료 화면
   if (status === "success") {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-        <div className="w-full max-w-md bg-white rounded-2xl p-8 text-center">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 via-white to-emerald-50">
+        <div className="w-full max-w-md bg-white rounded-3xl shadow-xl p-8 text-center animate-pop-in">
+          <div className="w-20 h-20 mx-auto mb-5 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-200">
             <svg
-              className="w-8 h-8 text-green-600"
+              className="w-12 h-12 text-white"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -111,19 +117,25 @@ export default function HomePage() {
               />
             </svg>
           </div>
-          <h1 className="text-xl font-bold text-gray-900 mb-2">
+          <h1 className="text-2xl font-bold text-gray-900 mb-3">
             제출 완료되었습니다
           </h1>
-          <p className="text-sm text-gray-600 mb-6">
-            오늘 {timeSlot?.label} 점검 기록이 저장되었습니다.
+          <p className="text-base text-gray-600 leading-relaxed mb-6">
+            오늘 <b className="text-gray-900">{timeSlot?.label}</b> 점검이
+            저장되었습니다.
             <br />
-            수고하셨습니다.
+            수고하셨습니다 🙇‍♀️
           </p>
+          {cCount > 0 && (
+            <div className="mb-6 rounded-xl bg-red-50 border border-red-200 p-3 text-sm text-red-800">
+              C 등급 {cCount}건은 사무실에 자동으로 알림이 전송되었습니다.
+            </div>
+          )}
           <button
             onClick={() => window.location.reload()}
-            className="w-full h-12 rounded-lg bg-blue-600 text-white font-semibold"
+            className="w-full h-14 rounded-2xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-lg transition-colors shadow-md shadow-blue-200"
           >
-            새 점검 시작
+            새 점검 시작하기
           </button>
         </div>
       </div>
@@ -131,67 +143,99 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 pb-32">
-      <div className="max-w-md mx-auto bg-white min-h-screen">
+    <div className="min-h-screen pb-32 bg-gray-100">
+      <div className="max-w-md mx-auto bg-white min-h-screen shadow-sm">
         {/* 헤더 */}
-        <div className="px-5 pt-6 pb-4 border-b border-gray-200 text-center">
-          <h1 className="text-lg font-bold text-gray-900">청소 점검</h1>
-          <p className="text-xs text-gray-500 mt-1">{ORG_INFO.name}</p>
-        </div>
-
-        <div className="p-5 space-y-4">
-          {/* 시간대 자동 감지 */}
-          {timeSlot && now && (
-            <div className="rounded-xl bg-green-50 p-4 flex items-center justify-between">
-              <div>
-                <p className="text-xs text-green-700">자동 감지된 시간대</p>
-                <p className="text-base font-bold text-green-900 mt-0.5">
-                  {timeSlot.label}
-                </p>
-              </div>
-              <p className="text-sm text-green-600">
+        <header className="px-5 pt-7 pb-5 bg-gradient-to-br from-blue-600 to-blue-700 text-white">
+          <div className="flex items-baseline justify-between">
+            <h1 className="text-xl font-bold tracking-tight">청소 점검</h1>
+            {now && (
+              <span className="text-xs font-medium text-blue-100">
                 {String(now.getMonth() + 1).padStart(2, "0")}/
                 {String(now.getDate()).padStart(2, "0")} ({getKoreanDay(now)})
-              </p>
-            </div>
-          )}
+              </span>
+            )}
+          </div>
+          <p className="text-sm text-blue-100 mt-1">{ORG_INFO.name}</p>
+        </header>
 
-          {/* 시간대 수동 변경 (혹시 다를 경우) */}
-          {timeSlot && (
-            <details className="text-xs text-gray-500">
-              <summary className="cursor-pointer hover:text-gray-700">
-                시간대가 다른가요?
-              </summary>
-              <div className="mt-2 grid grid-cols-3 gap-2">
-                {TIME_SLOTS.map((slot) => (
-                  <button
-                    key={slot.id}
-                    type="button"
-                    onClick={() => setTimeSlot(slot)}
-                    className={`h-10 rounded-lg border text-xs font-medium ${
-                      slot.id === timeSlot.id
-                        ? "bg-blue-50 border-blue-500 text-blue-900"
-                        : "bg-white border-gray-300 text-gray-700"
-                    }`}
+        {/* 진행률 바 */}
+        <div className="h-1.5 bg-gray-200">
+          <div
+            className="h-full bg-emerald-500 transition-all duration-300"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+
+        <div className="p-5 space-y-5">
+          {/* 시간대 카드 */}
+          {timeSlot && now && (
+            <div className="rounded-2xl bg-emerald-50 border border-emerald-200 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-emerald-700">
+                    자동 감지된 점검 시간대
+                  </p>
+                  <p className="text-xl font-bold text-emerald-900 mt-1 tracking-tight">
+                    {timeSlot.label}
+                  </p>
+                </div>
+                <div className="w-12 h-12 rounded-full bg-emerald-500 flex items-center justify-center text-white">
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
                   >
-                    {slot.label}
-                  </button>
-                ))}
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </div>
               </div>
-            </details>
+
+              <details className="mt-3 text-xs">
+                <summary className="cursor-pointer text-emerald-700 hover:text-emerald-900 select-none">
+                  시간대가 다른가요? 직접 선택
+                </summary>
+                <div className="mt-3 grid grid-cols-3 gap-2">
+                  {TIME_SLOTS.map((slot) => (
+                    <button
+                      key={slot.id}
+                      type="button"
+                      onClick={() => setTimeSlot(slot)}
+                      className={`h-11 rounded-lg border text-xs font-semibold transition-colors ${
+                        slot.id === timeSlot.id
+                          ? "bg-emerald-600 border-emerald-600 text-white"
+                          : "bg-white border-gray-300 text-gray-700"
+                      }`}
+                    >
+                      {slot.label}
+                    </button>
+                  ))}
+                </div>
+              </details>
+            </div>
           )}
 
           {/* 점검자 선택 */}
           <div>
-            <label className="block text-xs text-gray-600 mb-1.5 font-medium">
-              점검자 *
+            <label className="block text-sm text-gray-700 mb-2 font-semibold">
+              점검자 <span className="text-red-500">*</span>
             </label>
             <select
               value={workerId}
               onChange={(e) => setWorkerId(e.target.value)}
-              className="w-full h-12 px-3 rounded-lg border border-gray-300 bg-white text-base focus:outline-none focus:ring-2 focus:ring-blue-200"
+              className={`w-full h-14 px-4 rounded-2xl border-2 text-base font-medium focus:outline-none focus:ring-4 transition-colors ${
+                workerId
+                  ? "bg-blue-50 border-blue-300 text-blue-900 focus:ring-blue-100"
+                  : "bg-white border-gray-300 text-gray-700 focus:ring-blue-100 focus:border-blue-400"
+              }`}
             >
-              <option value="">선택해주세요</option>
+              <option value="">— 본인 이름을 선택해주세요 —</option>
               {WORKERS.map((w) => (
                 <option key={w.id} value={w.id}>
                   {w.name}
@@ -200,16 +244,30 @@ export default function HomePage() {
             </select>
           </div>
 
-          {/* 점검 항목들 */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs text-gray-500 px-1">
-              <span>점검 항목 ({completedCount}/{totalCount})</span>
-              <span>각 항목에 A·B·C 선택</span>
+          {/* 점검 항목 헤더 */}
+          <div className="flex items-center justify-between pt-2">
+            <h2 className="text-base font-bold text-gray-900">점검 항목</h2>
+            <div className="flex items-center gap-1.5 text-xs">
+              <span
+                className={`font-bold ${
+                  allComplete ? "text-emerald-600" : "text-blue-600"
+                }`}
+              >
+                {completedCount}
+              </span>
+              <span className="text-gray-400">/</span>
+              <span className="text-gray-500">{totalCount}</span>
+              <span className="text-gray-500 ml-1">완료</span>
             </div>
-            {CHECKLIST_ITEMS.map((item) => (
+          </div>
+
+          {/* 점검 항목들 */}
+          <div className="space-y-3">
+            {CHECKLIST_ITEMS.map((item, idx) => (
               <CheckItem
                 key={item.id}
                 item={item}
+                index={idx + 1}
                 value={results[item.id]}
                 onChange={updateResult}
               />
@@ -218,44 +276,85 @@ export default function HomePage() {
 
           {/* 검증 메시지 */}
           {cWithoutNote.length > 0 && (
-            <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-800">
-              C 등급 항목은 특이사항을 반드시 입력해주세요.
+            <div className="rounded-2xl bg-red-50 border border-red-200 p-4 text-sm text-red-800 flex gap-3">
+              <span className="text-xl leading-none">⚠️</span>
+              <div>
+                <p className="font-semibold mb-0.5">특이사항이 비어 있습니다</p>
+                <p className="text-red-700">
+                  C 등급 항목은 어떤 문제인지 짧게라도 입력해주세요.
+                </p>
+              </div>
             </div>
           )}
 
           {status === "error" && (
-            <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-800">
-              제출 실패: {errorMsg}
-              <br />
-              잠시 후 다시 시도해주세요.
+            <div className="rounded-2xl bg-red-50 border border-red-200 p-4 text-sm text-red-800">
+              <p className="font-semibold mb-1">제출에 실패했어요</p>
+              <p className="text-red-700 break-words">{errorMsg}</p>
+              <p className="text-red-600 mt-2 text-xs">
+                인터넷 연결을 확인하고 다시 제출해주세요.
+              </p>
             </div>
           )}
         </div>
 
         {/* 하단 고정 제출 버튼 */}
-        <div className="fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 p-4">
+        <div className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur border-t border-gray-200 p-4">
           <div className="max-w-md mx-auto">
+            {cCount > 0 && (
+              <p className="text-xs text-center text-red-600 mb-2 font-medium">
+                ⚠ C 등급 {cCount}건 — 사무실에 즉시 알림이 전송됩니다
+              </p>
+            )}
             <button
               onClick={handleSubmit}
               disabled={!canSubmit || status === "submitting"}
-              className={`w-full h-14 rounded-xl text-base font-bold transition-colors ${
+              className={`w-full h-16 rounded-2xl text-lg font-bold transition-all ${
                 canSubmit && status !== "submitting"
-                  ? "bg-blue-600 text-white"
+                  ? "bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white shadow-lg shadow-blue-200"
                   : "bg-gray-200 text-gray-400"
               }`}
             >
-              {status === "submitting"
-                ? "제출 중..."
-                : !workerId
-                ? "점검자를 선택해주세요"
-                : !allComplete
-                ? `${totalCount - completedCount}개 항목 남음`
-                : "제출하기"}
+              {status === "submitting" ? (
+                <span className="inline-flex items-center gap-2">
+                  <Spinner /> 제출 중...
+                </span>
+              ) : !workerId ? (
+                "점검자를 먼저 선택해주세요"
+              ) : !allComplete ? (
+                `${totalCount - completedCount}개 항목 남음`
+              ) : (
+                "제출하기"
+              )}
             </button>
           </div>
         </div>
       </div>
     </div>
+  );
+}
+
+function Spinner() {
+  return (
+    <svg
+      className="animate-spin h-5 w-5 text-current"
+      viewBox="0 0 24 24"
+      fill="none"
+    >
+      <circle
+        className="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="4"
+      />
+      <path
+        className="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+      />
+    </svg>
   );
 }
 
