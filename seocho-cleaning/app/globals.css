@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Malgun Gothic", "맑은 고딕",
+    "Pretendard", system-ui, sans-serif;
+}
+
+/* iOS Safari 입력 줌 방지 (16px 이상이면 자동으로 안 됨) */
+input,
+select,
+textarea {
+  font-size: 16px;
+}
