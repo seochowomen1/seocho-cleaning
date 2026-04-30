@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { TIME_SLOTS, WORKERS, formatDate } from "@/lib/config";
 
 type Submission = {
   date: string;
@@ -112,6 +113,48 @@ export default function AdminPage() {
     return Array.from(map.entries())
       .map(([name, v]) => ({ name, ...v }))
       .sort((a, b) => b.total - a.total);
+  }, [data]);
+
+  // 오늘 슬롯별 현황 (3개 시간대)
+  const todayStatus = useMemo(() => {
+    const today = formatDate(new Date());
+    const nowHour = new Date().getHours();
+    return TIME_SLOTS.map((slot) => {
+      const worker = WORKERS.find((w) => w.timeSlotId === slot.id);
+      const submission = data?.submissions.find(
+        (s) =>
+          s.date === today &&
+          (s.timeSlotLabel === slot.label || s.timeSlotLabel.includes(slot.label))
+      );
+      let state: "done" | "pending" | "missed" = "pending";
+      if (submission) state = "done";
+      else if (nowHour >= slot.endHour) state = "missed";
+      return {
+        slot,
+        worker,
+        submission,
+        state,
+        cCount: submission
+          ? submission.results.filter((r) => r.grade === "C").length
+          : 0,
+      };
+    });
+  }, [data]);
+
+  // 항목별 조치필요 빈도 (어떤 항목이 자주 문제인지)
+  const itemIssues = useMemo(() => {
+    if (!data) return [];
+    const map = new Map<string, number>();
+    data.submissions.forEach((s) =>
+      s.results.forEach((r) => {
+        if (r.grade === "C") {
+          map.set(r.itemName, (map.get(r.itemName) || 0) + 1);
+        }
+      })
+    );
+    return Array.from(map.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count);
   }, [data]);
 
   const filteredSubmissions = useMemo(() => {
@@ -302,6 +345,9 @@ export default function AdminPage() {
 
         {data && (
           <>
+            {/* ===== 오늘 현황 (3개 시간대 컴플라이언스) ===== */}
+            <TodayStatusPanel slots={todayStatus} />
+
             {/* ===== KPI 카드 ===== */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
               <KpiCard
@@ -403,6 +449,9 @@ export default function AdminPage() {
                 )}
               </div>
             </div>
+
+            {/* ===== 항목별 조치필요 빈도 ===== */}
+            <ItemIssuesPanel items={itemIssues} />
 
             {/* ===== 제출 내역 ===== */}
             <div className="bg-white rounded-2xl shadow-soft border border-ink-100 overflow-hidden">
@@ -572,6 +621,250 @@ function Avatar({ name }: { name: string }) {
 function EmptyMini({ text }: { text: string }) {
   return (
     <div className="py-6 text-center text-xs text-ink-400">{text}</div>
+  );
+}
+
+// ============================================
+// 오늘 현황 패널
+// ============================================
+function TodayStatusPanel({
+  slots,
+}: {
+  slots: {
+    slot: { id: string; label: string };
+    worker: { name: string } | undefined;
+    submission: Submission | undefined;
+    state: "done" | "pending" | "missed";
+    cCount: number;
+  }[];
+}) {
+  const today = new Date();
+  const dateLabel = `${today.getFullYear()}.${String(
+    today.getMonth() + 1
+  ).padStart(2, "0")}.${String(today.getDate()).padStart(2, "0")}`;
+  const missed = slots.filter((s) => s.state === "missed").length;
+  const done = slots.filter((s) => s.state === "done").length;
+
+  return (
+    <div className="bg-white rounded-2xl shadow-soft border border-ink-100 p-5 mb-5">
+      <div className="flex items-baseline justify-between mb-4">
+        <div>
+          <h2 className="text-sm font-bold text-ink-900">오늘 현황</h2>
+          <p className="text-[11px] text-ink-500 mt-0.5">{dateLabel}</p>
+        </div>
+        <div className="text-xs flex items-center gap-3">
+          <span className="text-emerald-700 font-semibold">
+            완료 {done}/{slots.length}
+          </span>
+          {missed > 0 && (
+            <span className="inline-flex items-center gap-1 px-2 h-6 rounded-md bg-rose-100 text-rose-700 font-bold">
+              ⚠ 미제출 {missed}
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        {slots.map(({ slot, worker, submission, state, cCount }) => (
+          <TodaySlotCard
+            key={slot.id}
+            slotLabel={slot.label}
+            workerName={worker?.name || "—"}
+            state={state}
+            submittedAt={submission?.submittedAt}
+            cCount={cCount}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TodaySlotCard({
+  slotLabel,
+  workerName,
+  state,
+  submittedAt,
+  cCount,
+}: {
+  slotLabel: string;
+  workerName: string;
+  state: "done" | "pending" | "missed";
+  submittedAt?: string;
+  cCount: number;
+}) {
+  const tone =
+    state === "done"
+      ? {
+          card: "bg-emerald-50/60 border-emerald-200",
+          bar: "bg-emerald-500",
+          icon: (
+            <svg
+              className="w-4 h-4 text-white"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={3}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+          ),
+          chip: "bg-emerald-500 text-white",
+          chipText: "완료",
+        }
+      : state === "missed"
+      ? {
+          card: "bg-rose-50/60 border-rose-300",
+          bar: "bg-rose-500",
+          icon: <span className="text-white text-xs font-bold">!</span>,
+          chip: "bg-rose-500 text-white",
+          chipText: "미제출",
+        }
+      : {
+          card: "bg-ink-50 border-ink-200",
+          bar: "bg-ink-300",
+          icon: (
+            <svg
+              className="w-4 h-4 text-white"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2.5}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 8v4l3 3"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          ),
+          chip: "bg-ink-200 text-ink-700",
+          chipText: "예정",
+        };
+
+  const submittedTime = submittedAt
+    ? (() => {
+        const d = new Date(submittedAt);
+        return `${String(d.getHours()).padStart(2, "0")}:${String(
+          d.getMinutes()
+        ).padStart(2, "0")}`;
+      })()
+    : null;
+
+  return (
+    <div
+      className={`relative rounded-xl border p-4 pl-5 transition-colors ${tone.card}`}
+    >
+      <span
+        className={`absolute left-0 top-3 bottom-3 w-1 rounded-r-full ${tone.bar}`}
+        aria-hidden
+      />
+      <div className="flex items-start justify-between mb-2">
+        <div>
+          <p className="text-[11px] font-semibold tracking-wider text-ink-500 uppercase">
+            {slotLabel}
+          </p>
+          <p className="text-base font-bold text-ink-900 mt-0.5">
+            {workerName}
+          </p>
+        </div>
+        <div
+          className={`shrink-0 w-7 h-7 rounded-full flex items-center justify-center ${tone.chip}`}
+        >
+          {tone.icon}
+        </div>
+      </div>
+      <div className="flex items-center justify-between mt-3">
+        <span
+          className={`inline-flex items-center px-2 h-6 rounded-md text-[11px] font-bold ${tone.chip}`}
+        >
+          {tone.chipText}
+        </span>
+        {state === "done" && (
+          <div className="flex items-center gap-2 text-[11px] text-ink-600">
+            {submittedTime && <span>{submittedTime} 제출</span>}
+            {cCount > 0 && (
+              <span className="text-rose-700 font-bold">조치 {cCount}</span>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ============================================
+// 항목별 조치필요 빈도
+// ============================================
+function ItemIssuesPanel({
+  items,
+}: {
+  items: { name: string; count: number }[];
+}) {
+  if (items.length === 0) {
+    return (
+      <div className="bg-white rounded-2xl shadow-soft border border-ink-100 p-5 mb-5">
+        <h3 className="text-sm font-bold text-ink-900 mb-1">
+          항목별 조치필요
+        </h3>
+        <p className="text-xs text-ink-500 mb-3">
+          기간 내 조치필요로 기록된 항목이 없습니다.
+        </p>
+        <EmptyMini text="이상 없음 🎉" />
+      </div>
+    );
+  }
+  const max = Math.max(...items.map((i) => i.count));
+  return (
+    <div className="bg-white rounded-2xl shadow-soft border border-ink-100 p-5 mb-5">
+      <div className="flex items-baseline justify-between mb-4">
+        <div>
+          <h3 className="text-sm font-bold text-ink-900">
+            항목별 조치필요 빈도
+          </h3>
+          <p className="text-[11px] text-ink-500 mt-0.5">
+            반복되는 항목이 있다면 시설/관리 점검 필요
+          </p>
+        </div>
+        <p className="text-xs text-ink-500">
+          총{" "}
+          <b className="text-rose-700">
+            {items.reduce((a, b) => a + b.count, 0)}
+          </b>
+          건
+        </p>
+      </div>
+      <ul className="space-y-2.5">
+        {items.map((it, idx) => (
+          <li key={it.name} className="flex items-center gap-3">
+            <span className="text-[11px] text-ink-400 w-4 text-right tabular-nums">
+              {idx + 1}
+            </span>
+            <span className="text-sm font-medium text-ink-800 w-32 truncate">
+              {it.name}
+            </span>
+            <div className="flex-1 h-2 bg-ink-100 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-rose-400 to-rose-600 transition-all"
+                style={{ width: `${(it.count / max) * 100}%` }}
+              />
+            </div>
+            <span className="text-sm font-bold text-rose-700 w-10 text-right tabular-nums">
+              {it.count}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
