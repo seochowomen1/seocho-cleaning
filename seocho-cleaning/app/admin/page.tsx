@@ -2,6 +2,10 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { TIME_SLOTS, WORKERS, formatDate } from "@/lib/config";
+import PhotoGallery from "@/components/admin/PhotoGallery";
+import type { PhotoEntry } from "@/components/admin/Lightbox";
+
+type AdminTab = "dashboard" | "gallery" | "submissions";
 
 type Submission = {
   date: string;
@@ -36,6 +40,8 @@ export default function AdminPage() {
   const [filterC, setFilterC] = useState(false);
   const [filterWorker, setFilterWorker] = useState("");
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [activeTab, setActiveTab] = useState<AdminTab>("dashboard");
+  const [drillItem, setDrillItem] = useState<string | null>(null);
 
   useEffect(() => {
     if (localStorage.getItem("adminPreview") === "1") {
@@ -161,6 +167,28 @@ export default function AdminPage() {
           : 0,
       };
     });
+  }, [data]);
+
+  // 사진이 첨부된 조치필요 항목 (갤러리용)
+  const photos = useMemo<PhotoEntry[]>(() => {
+    if (!data) return [];
+    const list: PhotoEntry[] = [];
+    data.submissions.forEach((s) =>
+      s.results.forEach((r) => {
+        if (r.grade === "C" && r.photoUrl) {
+          list.push({
+            photoUrl: r.photoUrl,
+            itemName: r.itemName,
+            itemId: r.itemId,
+            workerName: s.workerName,
+            date: s.date,
+            timeSlotLabel: s.timeSlotLabel,
+            note: r.note || "",
+          });
+        }
+      })
+    );
+    return list;
   }, [data]);
 
   // 항목별 조치필요 빈도 (어떤 항목이 자주 문제인지)
@@ -333,6 +361,43 @@ export default function AdminPage() {
         </div>
       </header>
 
+      {/* ===== 탭 네비게이션 ===== */}
+      <nav className="bg-white border-b border-ink-100 sticky top-16 z-[5]">
+        <div className="max-w-6xl mx-auto px-5 md:px-8 flex items-center gap-1">
+          {([
+            { id: "dashboard", label: "대시보드" },
+            { id: "gallery", label: "사진 갤러리", count: photos.length },
+            { id: "submissions", label: "제출 내역" },
+          ] as const).map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setActiveTab(t.id)}
+              className={`relative h-12 px-4 text-sm font-semibold transition-colors inline-flex items-center gap-1.5 ${
+                activeTab === t.id
+                  ? "text-ink-900"
+                  : "text-ink-500 hover:text-ink-800"
+              }`}
+            >
+              {t.label}
+              {"count" in t && t.count !== undefined && t.count > 0 && (
+                <span
+                  className={`px-1.5 h-5 inline-flex items-center rounded text-[10px] font-bold ${
+                    activeTab === t.id
+                      ? "bg-rose-100 text-rose-700"
+                      : "bg-ink-100 text-ink-600"
+                  }`}
+                >
+                  {t.count}
+                </span>
+              )}
+              {activeTab === t.id && (
+                <span className="absolute left-2 right-2 bottom-0 h-0.5 bg-ink-900 rounded-full" />
+              )}
+            </button>
+          ))}
+        </div>
+      </nav>
+
       <div className="max-w-6xl mx-auto px-5 md:px-8 py-6">
         {/* ===== 필터 바 ===== */}
         <div className="flex flex-wrap items-center gap-2 mb-5">
@@ -415,28 +480,26 @@ export default function AdminPage() {
           </div>
         )}
 
-        {data && (
-          <>
-            {/* ===== 미리보기 모드 안내 ===== */}
-            {previewMode && (
-              <div className="mb-4 rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50 to-amber-100/50 p-4 flex items-center gap-3">
-                <div className="w-9 h-9 shrink-0 rounded-xl bg-amber-500 text-white flex items-center justify-center">
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-amber-900">
-                    미리보기 모드
-                  </p>
-                  <p className="text-xs text-amber-800">
-                    실제 데이터가 아닌 샘플로 디자인을 미리 보고 있습니다.
-                    실제 데이터를 보려면 우상단 &quot;나가기&quot; 후 관리자 키로 로그인하세요.
-                  </p>
-                </div>
-              </div>
-            )}
+        {/* ===== 미리보기 모드 안내 (모든 탭) ===== */}
+        {previewMode && data && (
+          <div className="mb-4 rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50 to-amber-100/50 p-4 flex items-center gap-3">
+            <div className="w-9 h-9 shrink-0 rounded-xl bg-amber-500 text-white flex items-center justify-center">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-amber-900">미리보기 모드</p>
+              <p className="text-xs text-amber-800">
+                실제 데이터가 아닌 샘플로 디자인을 미리 보고 있습니다.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {data && activeTab === "dashboard" && (
+          <div className="animate-fade-in">
 
             {/* ===== 미제출 알림 배너 ===== */}
             {(() => {
@@ -567,9 +630,24 @@ export default function AdminPage() {
             </div>
 
             {/* ===== 항목별 조치필요 빈도 ===== */}
-            <ItemIssuesPanel items={itemIssues} />
+            <ItemIssuesPanel
+              items={itemIssues}
+              onItemClick={(name) => setDrillItem(name)}
+            />
+          </div>
+        )}
+        {/* ===== /대시보드 ===== */}
 
-            {/* ===== 제출 내역 ===== */}
+        {/* ===== 사진 갤러리 ===== */}
+        {data && activeTab === "gallery" && (
+          <div className="animate-fade-in">
+            <PhotoGallery photos={photos} />
+          </div>
+        )}
+
+        {/* ===== 제출 내역 ===== */}
+        {data && activeTab === "submissions" && (
+          <div className="animate-fade-in">
             <div className="bg-white rounded-2xl shadow-soft border border-ink-100 overflow-hidden">
               <div className="px-5 py-4 border-b border-ink-100 flex items-center justify-between">
                 <h3 className="text-sm font-bold text-ink-900">
@@ -610,7 +688,16 @@ export default function AdminPage() {
                 </ul>
               )}
             </div>
-          </>
+          </div>
+        )}
+
+        {/* ===== 항목 드릴다운 모달 ===== */}
+        {drillItem && data && (
+          <ItemDrillModal
+            itemName={drillItem}
+            submissions={data.submissions}
+            onClose={() => setDrillItem(null)}
+          />
         )}
       </div>
     </div>
@@ -945,8 +1032,10 @@ function TodaySlotCard({
 // ============================================
 function ItemIssuesPanel({
   items,
+  onItemClick,
 }: {
   items: { name: string; count: number }[];
+  onItemClick?: (name: string) => void;
 }) {
   if (items.length === 0) {
     return (
@@ -970,7 +1059,7 @@ function ItemIssuesPanel({
             항목별 조치필요 빈도
           </h3>
           <p className="text-[11px] text-ink-500 mt-0.5">
-            반복되는 항목이 있다면 시설/관리 점검 필요
+            항목을 누르면 해당 사례를 자세히 볼 수 있어요
           </p>
         </div>
         <p className="text-xs text-ink-500">
@@ -981,27 +1070,173 @@ function ItemIssuesPanel({
           건
         </p>
       </div>
-      <ul className="space-y-2.5">
+      <ul className="space-y-1">
         {items.map((it, idx) => (
-          <li key={it.name} className="flex items-center gap-3">
-            <span className="text-[11px] text-ink-400 w-4 text-right tabular-nums">
-              {idx + 1}
-            </span>
-            <span className="text-sm font-medium text-ink-800 w-32 truncate">
-              {it.name}
-            </span>
-            <div className="flex-1 h-2 bg-ink-100 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-rose-400 to-rose-600 transition-all"
-                style={{ width: `${(it.count / max) * 100}%` }}
-              />
-            </div>
-            <span className="text-sm font-bold text-rose-700 w-10 text-right tabular-nums">
-              {it.count}
-            </span>
+          <li key={it.name}>
+            <button
+              type="button"
+              onClick={() => onItemClick?.(it.name)}
+              className="w-full flex items-center gap-3 py-1.5 px-2 -mx-2 rounded-lg hover:bg-ink-50 transition-colors text-left group"
+            >
+              <span className="text-[11px] text-ink-400 w-4 text-right tabular-nums">
+                {idx + 1}
+              </span>
+              <span className="text-sm font-medium text-ink-800 w-32 truncate group-hover:text-ink-900">
+                {it.name}
+              </span>
+              <div className="flex-1 h-2 bg-ink-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-rose-400 to-rose-600 transition-all"
+                  style={{ width: `${(it.count / max) * 100}%` }}
+                />
+              </div>
+              <span className="text-sm font-bold text-rose-700 w-10 text-right tabular-nums">
+                {it.count}
+              </span>
+              <svg
+                className="w-3.5 h-3.5 text-ink-300 group-hover:text-ink-600 transition-colors"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2.5}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
           </li>
         ))}
       </ul>
+    </div>
+  );
+}
+
+// ============================================
+// 항목 드릴다운 모달
+// ============================================
+function ItemDrillModal({
+  itemName,
+  submissions,
+  onClose,
+}: {
+  itemName: string;
+  submissions: Submission[];
+  onClose: () => void;
+}) {
+  // 해당 항목의 C 등급 사례만 추출
+  const cases = useMemo(() => {
+    const list: {
+      date: string;
+      timeSlotLabel: string;
+      workerName: string;
+      note: string;
+      photoUrl?: string;
+    }[] = [];
+    submissions.forEach((s) =>
+      s.results.forEach((r) => {
+        if (r.grade === "C" && r.itemName === itemName) {
+          list.push({
+            date: s.date,
+            timeSlotLabel: s.timeSlotLabel,
+            workerName: s.workerName,
+            note: r.note || "",
+            photoUrl: r.photoUrl,
+          });
+        }
+      })
+    );
+    return list.sort((a, b) =>
+      `${b.date}${b.timeSlotLabel}`.localeCompare(`${a.date}${a.timeSlotLabel}`)
+    );
+  }, [submissions, itemName]);
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", handleKey);
+      document.body.style.overflow = "";
+    };
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-40 bg-ink-900/50 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-5 animate-fade-in"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+    >
+      <div
+        className="w-full md:max-w-2xl bg-white rounded-t-3xl md:rounded-3xl shadow-2xl max-h-[85vh] flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* 헤더 */}
+        <div className="px-5 md:px-6 py-4 border-b border-ink-100 flex items-center justify-between">
+          <div className="min-w-0">
+            <p className="text-[11px] font-semibold tracking-wider text-rose-600 uppercase">
+              조치필요 사례
+            </p>
+            <h2 className="text-lg font-bold text-ink-900 tracking-tight truncate">
+              {itemName}
+              <span className="text-sm text-ink-500 font-normal ml-2">
+                {cases.length}건
+              </span>
+            </h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-9 h-9 rounded-full bg-ink-100 hover:bg-ink-200 text-ink-700 flex items-center justify-center transition-colors"
+            aria-label="닫기"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* 본문 */}
+        <div className="overflow-y-auto p-5 md:p-6 space-y-3">
+          {cases.length === 0 ? (
+            <p className="text-center text-sm text-ink-400 py-12">
+              사례가 없습니다.
+            </p>
+          ) : (
+            cases.map((c, i) => (
+              <div
+                key={i}
+                className="rounded-2xl border border-ink-100 p-4 hover:border-rose-200 hover:bg-rose-50/30 transition-colors"
+              >
+                <div className="flex items-baseline justify-between gap-2">
+                  <p className="text-sm font-bold text-ink-900">
+                    {c.date}
+                    <span className="font-normal text-ink-500 ml-2">
+                      {c.timeSlotLabel}
+                    </span>
+                  </p>
+                  <p className="text-xs text-ink-500 shrink-0">{c.workerName}</p>
+                </div>
+                {c.note && (
+                  <p className="text-sm text-ink-700 mt-2 leading-relaxed">
+                    📝 {c.note}
+                  </p>
+                )}
+                {c.photoUrl && (
+                  <a
+                    href={c.photoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block mt-2 text-xs text-brand-600 hover:text-brand-800 hover:underline"
+                  >
+                    📷 사진 보기 ↗
+                  </a>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -1181,12 +1416,17 @@ function generateMockData(days: number): StatsData {
           grade === "C"
             ? cNotes[it.id]?.[seed % (cNotes[it.id]?.length || 1)] || ""
             : undefined;
+        // C 등급 중 약 60%에 placeholder 사진 부착 (Picsum)
+        const photoUrl =
+          grade === "C" && Math.abs(Math.sin(seed * 1.7)) > 0.4
+            ? `https://picsum.photos/seed/sc${seed}/640/480`
+            : undefined;
         return {
           itemId: it.id,
           itemName: it.name,
           grade,
           note,
-          photoUrl: undefined,
+          photoUrl,
         };
       });
 
