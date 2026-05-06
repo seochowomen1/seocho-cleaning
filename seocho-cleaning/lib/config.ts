@@ -25,14 +25,9 @@ export const TIME_SLOTS: TimeSlot[] = [
 // 점검 항목 정의
 export const CHECKLIST_ITEMS: ChecklistItem[] = [
   {
-    id: "desk",
-    name: "강의용 책상",
-    description: "책상이 열을 맞춰 바르게 정렬되어 있는가?",
-  },
-  {
-    id: "chair",
-    name: "강의용 의자",
-    description: "의자가 책상 아래에 깔끔하게 정리되었는가?",
+    id: "desk_chair",
+    name: "강의용 책상/의자 정리",
+    description: "책상은 열을 맞추고 의자는 깔끔하게 정리되었는가?",
   },
   {
     id: "dust",
@@ -47,7 +42,7 @@ export const CHECKLIST_ITEMS: ChecklistItem[] = [
   {
     id: "ac_light",
     name: "냉난방·전등",
-    description: "전등과 에어컨이 꺼져 있는가? (※ 마지막 타임 필수)",
+    description: "빈강의실의 전등과 에어컨이 꺼져 있는가?",
   },
   {
     id: "healing_room",
@@ -57,12 +52,17 @@ export const CHECKLIST_ITEMS: ChecklistItem[] = [
   {
     id: "hallway",
     name: "복도·출입구",
-    description: "복도 및 출입구가 정리·청결한가?",
+    description: "복도 및 출입구의 이물질이 없는가?",
   },
   {
-    id: "trash",
-    name: "쓰레기통",
-    description: "쓰레기통이 비워졌는가? (가득 찬 경우 비움)",
+    id: "recycling",
+    name: "각층 분리수거함",
+    description: "분리수거함 위 쓰레기를 정리 했는가?",
+  },
+  {
+    id: "water_cup",
+    name: "정수기 물컵",
+    description: "각 층 정수기 물컵이 채워져 있는가?",
   },
 ];
 

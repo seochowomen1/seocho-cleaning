@@ -1355,14 +1355,14 @@ function formatRelativeTime(d: Date): string {
 function generateMockData(days: number): StatsData {
   const today = new Date();
   const items = [
-    { id: "desk", name: "강의용 책상" },
-    { id: "chair", name: "강의용 의자" },
+    { id: "desk_chair", name: "강의용 책상/의자 정리" },
     { id: "dust", name: "이물질·먼지" },
     { id: "floor", name: "바닥 상태" },
     { id: "ac_light", name: "냉난방·전등" },
     { id: "healing_room", name: "힐링·마루강의실" },
     { id: "hallway", name: "복도·출입구" },
-    { id: "trash", name: "쓰레기통" },
+    { id: "recycling", name: "각층 분리수거함" },
+    { id: "water_cup", name: "정수기 물컵" },
   ];
   const slots = [
     { label: "09:00 ~ 12:00", worker: "김성만", endHour: 12 },
@@ -1379,14 +1379,14 @@ function generateMockData(days: number): StatsData {
     return "A";
   };
   const cNotes: Record<string, string[]> = {
-    desk: ["책상 두 개가 흐트러져 있음", "다리 흔들림 1개 발견"],
-    chair: ["의자 하나 부서짐", "정리 안 됨"],
+    desk_chair: ["책상 두 개가 흐트러져 있음", "의자 1개 부서짐"],
     dust: ["창틀 먼지 쌓임"],
     floor: ["바닥에 이물질이 지워지지 않음", "물기 자국"],
-    ac_light: ["에어컨 끄지 않음", "전등 1개 점등"],
+    ac_light: ["빈강의실 에어컨 미가동 후 꺼짐 안됨", "전등 1개 점등 그대로"],
     healing_room: ["거울 얼룩"],
     hallway: ["복도 종이박스 방치"],
-    trash: ["쓰레기통 가득 참 (비움 완료)", "분리수거 미흡"],
+    recycling: ["분리수거함 위 종이쓰레기 쌓임", "분리수거 미흡"],
+    water_cup: ["3층 물컵 비어있음", "1층 물컵 부족"],
   };
 
   const submissions: Submission[] = [];

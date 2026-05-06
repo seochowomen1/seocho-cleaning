@@ -289,14 +289,14 @@ function logError(where, err) {
 // 클라이언트가 itemName 을 함께 보내지 않은 경우의 fallback (구버전 호환)
 function getItemName(itemId) {
   const map = {
-    desk: "강의용 책상",
-    chair: "강의용 의자",
+    desk_chair: "강의용 책상/의자 정리",
     dust: "이물질·먼지",
     floor: "바닥 상태",
     ac_light: "냉난방·전등",
     healing_room: "힐링·마루강의실",
     hallway: "복도·출입구",
-    trash: "쓰레기통",
+    recycling: "각층 분리수거함",
+    water_cup: "정수기 물컵",
   };
   return map[itemId] || itemId;
 }
