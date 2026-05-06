@@ -341,6 +341,13 @@ export default function HomePage() {
             </p>
           </div>
 
+          {/* 안내 — 해당없는 항목 처리 */}
+          <div className="rounded-2xl bg-brand-50/60 border border-brand-100 px-4 py-2.5 text-[12px] text-brand-800 leading-relaxed">
+            <span className="font-bold">💡 안내</span> 층 표시(예: 4·5·6층)나
+            주 1회 항목 중 <b>오늘 해당이 없으면 &lsquo;양호&rsquo;</b>로
+            선택하세요.
+          </div>
+
           {/* 점검 항목 카드들 */}
           <div className="space-y-3 pt-1">
             {CHECKLIST_ITEMS.map((item, idx) => (

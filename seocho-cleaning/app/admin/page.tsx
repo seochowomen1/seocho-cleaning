@@ -1363,6 +1363,8 @@ function generateMockData(days: number): StatsData {
     { id: "hallway", name: "복도·출입구" },
     { id: "recycling", name: "각층 분리수거함" },
     { id: "water_cup", name: "정수기 물컵" },
+    { id: "plants", name: "화분 관수 및 상태" },
+    { id: "terrace", name: "테라스 주변 정리" },
   ];
   const slots = [
     { label: "09:00 ~ 12:00", worker: "김성만", endHour: 12 },
@@ -1379,14 +1381,16 @@ function generateMockData(days: number): StatsData {
     return "A";
   };
   const cNotes: Record<string, string[]> = {
-    desk_chair: ["책상 두 개가 흐트러져 있음", "의자 1개 부서짐"],
+    desk_chair: ["5층 상상1 책상 흐트러짐", "강사 테이블 종이컵 방치"],
     dust: ["창틀 먼지 쌓임"],
     floor: ["바닥에 이물질이 지워지지 않음", "물기 자국"],
-    ac_light: ["빈강의실 에어컨 미가동 후 꺼짐 안됨", "전등 1개 점등 그대로"],
-    healing_room: ["거울 얼룩"],
+    ac_light: ["빈 강의실 에어컨 꺼짐 안됨", "전등 1개 점등 그대로"],
+    healing_room: ["7층 거울 얼룩", "마루 오염"],
     hallway: ["복도 종이박스 방치"],
     recycling: ["분리수거함 위 종이쓰레기 쌓임", "분리수거 미흡"],
     water_cup: ["3층 물컵 비어있음", "1층 물컵 부족"],
+    plants: ["화분 관수 미실시", "화분 받침대 먼지 쌓임"],
+    terrace: ["6층 테라스 테이블 먼지", "테라스 잔여 쓰레기"],
   };
 
   const submissions: Submission[] = [];

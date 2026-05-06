@@ -297,6 +297,8 @@ function getItemName(itemId) {
     hallway: "복도·출입구",
     recycling: "각층 분리수거함",
     water_cup: "정수기 물컵",
+    plants: "화분 관수 및 상태",
+    terrace: "테라스 주변 정리",
   };
   return map[itemId] || itemId;
 }

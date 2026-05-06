@@ -27,42 +27,62 @@ export const CHECKLIST_ITEMS: ChecklistItem[] = [
   {
     id: "desk_chair",
     name: "강의용 책상/의자 정리",
-    description: "책상은 열을 맞추고 의자는 깔끔하게 정리되었는가?",
+    floors: "4·5·6층",
+    questions: [
+      "책상은 열을 맞추고 의자는 깔끔하게 정리되었는가?",
+      "강사 테이블에 쓰레기는 없는가?",
+    ],
   },
   {
     id: "dust",
     name: "이물질·먼지",
-    description: "책상·의자 위 먼지나 이물질이 제거되었는가?",
+    questions: ["책상·의자 위 먼지나 이물질이 제거되었는가?"],
   },
   {
     id: "floor",
     name: "바닥 상태",
-    description: "눈에 띄는 쓰레기나 오염이 없는가?",
+    questions: ["눈에 띄는 쓰레기나 오염이 없는가?"],
   },
   {
     id: "ac_light",
     name: "냉난방·전등",
-    description: "빈강의실의 전등과 에어컨이 꺼져 있는가?",
+    questions: ["빈 강의실의 전등과 냉난방이 꺼져 있는가?"],
   },
   {
     id: "healing_room",
     name: "힐링·마루강의실",
-    description: "거울 및 바닥은 오염이 없는가?",
+    floors: "7층",
+    questions: ["거울 및 바닥은 오염이 없는가?"],
   },
   {
     id: "hallway",
     name: "복도·출입구",
-    description: "복도 및 출입구의 이물질이 없는가?",
+    questions: ["복도 및 출입구의 이물질이 없는가?"],
   },
   {
     id: "recycling",
     name: "각층 분리수거함",
-    description: "분리수거함 위 쓰레기를 정리 했는가?",
+    questions: ["분리수거함 위 쓰레기를 정리 했는가?"],
   },
   {
     id: "water_cup",
     name: "정수기 물컵",
-    description: "각 층 정수기 물컵이 채워져 있는가?",
+    questions: ["각 층 정수기 물컵이 채워져 있는가?"],
+  },
+  {
+    id: "plants",
+    name: "화분 관수 및 상태",
+    frequency: "weekly",
+    questions: [
+      "화분 관수는 했는가?",
+      "잎 먼지제거 및 화분 받침대를 정리 했는가?",
+    ],
+  },
+  {
+    id: "terrace",
+    name: "테라스 주변 정리",
+    floors: "6층",
+    questions: ["테라스 테이블 위 먼지나 이물질이 제거되었는가?"],
   },
 ];
 
@@ -94,7 +114,12 @@ export type TimeSlot = {
 export type ChecklistItem = {
   id: string;
   name: string;
-  description: string;
+  /** 1개 이상의 질문 (UI에서 bullet 리스트로 표시) */
+  questions: string[];
+  /** "4·5·6층" / "7층" 등 적용 층 표기 (없으면 표시 안 함) */
+  floors?: string;
+  /** 주기적 점검 (현재는 주 1회만 지원) */
+  frequency?: "weekly";
 };
 
 export type GradeId = "A" | "B" | "C";

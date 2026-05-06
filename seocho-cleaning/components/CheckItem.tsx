@@ -123,12 +123,32 @@ export default function CheckItem({ item, index, value, onChange }: Props) {
           {isDone ? grade : index ?? ""}
         </div>
         <div className="flex-1 min-w-0 pt-0.5">
-          <p className="text-base font-bold text-ink-900 leading-tight tracking-tight">
-            {item.name}
-          </p>
-          <p className="mt-1 text-[13px] text-ink-600 leading-relaxed">
-            {item.description}
-          </p>
+          <div className="flex items-center flex-wrap gap-1.5">
+            <p className="text-base font-bold text-ink-900 leading-tight tracking-tight">
+              {item.name}
+            </p>
+            {item.floors && (
+              <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold tracking-wider bg-brand-100 text-brand-700">
+                {item.floors}
+              </span>
+            )}
+            {item.frequency === "weekly" && (
+              <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold tracking-wider bg-amber-100 text-amber-700">
+                주 1회
+              </span>
+            )}
+          </div>
+          <ul className="mt-2 space-y-1">
+            {item.questions.map((q, i) => (
+              <li
+                key={i}
+                className="text-[13px] text-ink-600 leading-relaxed flex gap-1.5"
+              >
+                <span className="text-ink-400 shrink-0 select-none">•</span>
+                <span>{q}</span>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
 
