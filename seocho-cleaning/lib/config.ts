@@ -73,6 +73,7 @@ export const CHECKLIST_ITEMS: ChecklistItem[] = [
     id: "plants",
     name: "화분 관수 및 상태",
     frequency: "weekly",
+    slots: ["morning"], // 09:00~12:00 시간대만
     questions: [
       "화분 관수는 했는가?",
       "잎 먼지제거 및 화분 받침대를 정리 했는가?",
@@ -120,6 +121,8 @@ export type ChecklistItem = {
   floors?: string;
   /** 주기적 점검 (현재는 주 1회만 지원) */
   frequency?: "weekly";
+  /** 이 항목이 표시되는 시간대 (없으면 모든 시간대) */
+  slots?: TimeSlot["id"][];
 };
 
 export type GradeId = "A" | "B" | "C";

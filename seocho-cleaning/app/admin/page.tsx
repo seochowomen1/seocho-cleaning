@@ -1354,7 +1354,7 @@ function formatRelativeTime(d: Date): string {
 // ============================================
 function generateMockData(days: number): StatsData {
   const today = new Date();
-  const items = [
+  const items: { id: string; name: string; slots?: string[] }[] = [
     { id: "desk_chair", name: "강의용 책상/의자 정리" },
     { id: "dust", name: "이물질·먼지" },
     { id: "floor", name: "바닥 상태" },
@@ -1363,13 +1363,13 @@ function generateMockData(days: number): StatsData {
     { id: "hallway", name: "복도·출입구" },
     { id: "recycling", name: "각층 분리수거함" },
     { id: "water_cup", name: "정수기 물컵" },
-    { id: "plants", name: "화분 관수 및 상태" },
+    { id: "plants", name: "화분 관수 및 상태", slots: ["morning"] },
     { id: "terrace", name: "테라스 주변 정리" },
   ];
   const slots = [
-    { label: "09:00 ~ 12:00", worker: "김성만", endHour: 12 },
-    { label: "12:00 ~ 15:00", worker: "배정열", endHour: 15 },
-    { label: "15:00 ~ 18:00", worker: "조숙임", endHour: 18 },
+    { id: "morning", label: "09:00 ~ 12:00", worker: "김성만", endHour: 12 },
+    { id: "afternoon", label: "12:00 ~ 15:00", worker: "배정열", endHour: 15 },
+    { id: "evening", label: "15:00 ~ 18:00", worker: "조숙임", endHour: 18 },
   ];
 
   // 결정적이지만 그럴듯한 등급 분포 (대부분 A, 가끔 B/C)
@@ -1413,7 +1413,12 @@ function generateMockData(days: number): StatsData {
         continue;
       }
 
-      const results = items.map((it) => {
+      // 해당 시간대에만 보이는 항목 (예: 화분 관수는 morning만)
+      const slotItems = items.filter(
+        (it) => !it.slots || it.slots.includes(slot.id)
+      );
+
+      const results = slotItems.map((it) => {
         seed++;
         const grade = pickGrade(seed);
         const note =

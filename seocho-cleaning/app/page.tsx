@@ -48,22 +48,39 @@ export default function HomePage() {
     setResults((prev) => ({ ...prev, [r.itemId]: r }));
   };
 
-  const completedCount = Object.keys(results).length;
-  const totalCount = CHECKLIST_ITEMS.length;
-  const allComplete = completedCount === totalCount;
-  const progress = (completedCount / totalCount) * 100;
+  // 현재 시간대에 해당하는 항목만 표시
+  const applicableItems = useMemo(() => {
+    if (!timeSlot) return CHECKLIST_ITEMS;
+    return CHECKLIST_ITEMS.filter(
+      (it) => !it.slots || it.slots.includes(timeSlot.id)
+    );
+  }, [timeSlot]);
+
+  // 현재 시간대 항목의 결과만 추출 (시간대 변경 시 비활성 항목 결과는 무시)
+  const applicableResults = useMemo(
+    () =>
+      applicableItems
+        .map((it) => results[it.id])
+        .filter(Boolean) as CheckResult[],
+    [applicableItems, results]
+  );
+
+  const completedCount = applicableResults.length;
+  const totalCount = applicableItems.length;
+  const allComplete = completedCount === totalCount && totalCount > 0;
+  const progress = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
 
   const cWithoutNote = useMemo(
     () =>
-      Object.values(results).filter(
+      applicableResults.filter(
         (r) => r.grade === "C" && (!r.note || r.note.trim() === "")
       ),
-    [results]
+    [applicableResults]
   );
 
   const cCount = useMemo(
-    () => Object.values(results).filter((r) => r.grade === "C").length,
-    [results]
+    () => applicableResults.filter((r) => r.grade === "C").length,
+    [applicableResults]
   );
 
   const canSubmit =
@@ -85,7 +102,7 @@ export default function HomePage() {
       timeSlotLabel: timeSlot.label,
       date: formatDate(now),
       submittedAt: new Date().toISOString(),
-      results: CHECKLIST_ITEMS.map((item) => results[item.id]),
+      results: applicableItems.map((item) => results[item.id]),
     };
 
     setStatus("submitting");
@@ -317,7 +334,7 @@ export default function HomePage() {
 
             {/* 도트 진행 바 */}
             <div className="flex gap-1 mb-2">
-              {CHECKLIST_ITEMS.map((it) => {
+              {applicableItems.map((it) => {
                 const r = results[it.id];
                 const cls = r
                   ? r.grade === "A"
@@ -350,7 +367,7 @@ export default function HomePage() {
 
           {/* 점검 항목 카드들 */}
           <div className="space-y-3 pt-1">
-            {CHECKLIST_ITEMS.map((item, idx) => (
+            {applicableItems.map((item, idx) => (
               <CheckItem
                 key={item.id}
                 item={item}
@@ -402,13 +419,13 @@ export default function HomePage() {
                 <span className="flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full bg-emerald-500" />
                   <b className="text-ink-800">
-                    {Object.values(results).filter((r) => r.grade === "A").length}
+                    {applicableResults.filter((r) => r.grade === "A").length}
                   </b>
                 </span>
                 <span className="flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full bg-amber-500" />
                   <b className="text-ink-800">
-                    {Object.values(results).filter((r) => r.grade === "B").length}
+                    {applicableResults.filter((r) => r.grade === "B").length}
                   </b>
                 </span>
                 <span className="flex items-center gap-1">
