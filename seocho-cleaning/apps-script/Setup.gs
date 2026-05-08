@@ -10,12 +10,14 @@
 
 function setupAll() {
   setupSheets();
+  setupConfigSheets();
   setupProperties();
   Logger.log("✅ 초기화 완료");
   Logger.log("이제 다음을 진행하세요:");
-  Logger.log("1. 스크립트 속성에서 ADMIN_KEY, NOTIFY_EMAIL, PHOTO_FOLDER_ID 값을 입력");
+  Logger.log("1. 스크립트 속성에서 ADMIN_KEY, SUBMIT_SECRET, NOTIFY_EMAIL, PHOTO_FOLDER_ID 값을 입력");
   Logger.log("2. 배포 → 새 배포 → 웹 앱으로 배포 (액세스: 모든 사용자)");
   Logger.log("3. 받은 URL을 Vercel의 APPS_SCRIPT_URL 환경변수에 입력");
+  Logger.log("4. Config_시설 / Config_시간대 / Config_점검자 / Config_점검항목 시트에서 점검표 내용 편집 가능");
 }
 
 function setupSheets() {
@@ -114,6 +116,98 @@ function setupProperties() {
   Logger.log("  - NOTIFY_EMAIL: 알림 받을 이메일");
   Logger.log("  - PHOTO_FOLDER_ID: Google Drive 사진 폴더 ID (선택)");
   Logger.log("  - SOLAPI_*: 알림톡 API 정보 (선택, 카톡 알림 사용 시)");
+}
+
+/**
+ * Config 시트 초기화 — 운영자가 시트에서 직접 점검 항목/점검자/시간대를 편집할 수 있게.
+ * 이미 시트가 있으면 건드리지 않음 (재실행 안전).
+ */
+function setupConfigSheets() {
+  setupConfig_Org();
+  setupConfig_TimeSlots();
+  setupConfig_Workers();
+  setupConfig_Items();
+  Logger.log("Config 시트 초기화 완료");
+}
+
+function setupConfig_Org() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName("Config_시설");
+  if (!sheet) sheet = ss.insertSheet("Config_시설");
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(["키", "값", "설명"]);
+    sheet.appendRow(["name", "서초여성가족플라자 서초센터", "기관명 (헤더에 표시)"]);
+    sheet.appendRow(["department", "사업경영팀", "부서명 (현재 사용 안 함)"]);
+    sheet.setFrozenRows(1);
+    sheet.getRange(1, 1, 1, 3).setBackground("#D9E2F3").setFontWeight("bold");
+    sheet.setColumnWidth(1, 110);
+    sheet.setColumnWidth(2, 270);
+    sheet.setColumnWidth(3, 230);
+  }
+}
+
+function setupConfig_TimeSlots() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName("Config_시간대");
+  if (!sheet) sheet = ss.insertSheet("Config_시간대");
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(["ID (변경금지)", "라벨", "시작시각(0-23)", "종료시각(0-23)"]);
+    sheet.appendRow(["morning", "09:00 ~ 12:00", 9, 12]);
+    sheet.appendRow(["afternoon", "12:00 ~ 15:00", 12, 15]);
+    sheet.appendRow(["evening", "15:00 ~ 18:00", 15, 18]);
+    sheet.setFrozenRows(1);
+    sheet.getRange(1, 1, 1, 4).setBackground("#D9E2F3").setFontWeight("bold");
+    sheet.setColumnWidths(1, 4, 130);
+  }
+}
+
+function setupConfig_Workers() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName("Config_점검자");
+  if (!sheet) sheet = ss.insertSheet("Config_점검자");
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(["ID (변경금지)", "이름", "담당시간대ID"]);
+    sheet.appendRow(["w001", "김성만", "morning"]);
+    sheet.appendRow(["w002", "배정열", "afternoon"]);
+    sheet.appendRow(["w003", "조숙임", "evening"]);
+    sheet.setFrozenRows(1);
+    sheet.getRange(1, 1, 1, 3).setBackground("#D9E2F3").setFontWeight("bold");
+    sheet.setColumnWidths(1, 3, 140);
+  }
+}
+
+function setupConfig_Items() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName("Config_점검항목");
+  if (!sheet) sheet = ss.insertSheet("Config_점검항목");
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow([
+      "순서", "ID (변경금지)", "항목명", "질문 (Alt+Enter로 줄바꿈)", "층", "주기 (weekly|빈칸)", "시간대 (콤마 구분)"
+    ]);
+    const rows = [
+      [1, "desk_chair", "강의용 책상/의자 정리", "책상은 열을 맞추고 의자는 깔끔하게 정리되었는가?\n강사 테이블에 쓰레기는 없는가?", "4·5·6층", "", ""],
+      [2, "dust", "이물질·먼지", "책상·의자 위 먼지나 이물질이 제거되었는가?", "", "", ""],
+      [3, "floor", "바닥 상태", "눈에 띄는 쓰레기나 오염이 없는가?", "", "", ""],
+      [4, "ac_light", "냉난방·전등", "빈 강의실의 전등과 냉난방이 꺼져 있는가?", "", "", ""],
+      [5, "healing_room", "힐링·마루강의실", "거울 및 바닥은 오염이 없는가?", "7층", "", ""],
+      [6, "hallway", "복도·출입구", "복도 및 출입구의 이물질이 없는가?", "", "", ""],
+      [7, "recycling", "각층 분리수거함", "분리수거함 위 쓰레기를 정리 했는가?", "", "", ""],
+      [8, "water_cup", "정수기 물컵", "각 층 정수기 물컵이 채워져 있는가?", "", "", ""],
+      [9, "plants", "화분 관수 및 상태", "화분 관수는 했는가?\n잎 먼지제거 및 화분 받침대를 정리 했는가?", "", "weekly", "morning"],
+      [10, "terrace", "테라스 주변 정리", "테라스 테이블 위 먼지나 이물질이 제거되었는가?", "6층", "", ""],
+    ];
+    rows.forEach(r => sheet.appendRow(r));
+    sheet.setFrozenRows(1);
+    sheet.getRange(1, 1, 1, 7).setBackground("#D9E2F3").setFontWeight("bold");
+    sheet.setColumnWidth(1, 60);
+    sheet.setColumnWidth(2, 110);
+    sheet.setColumnWidth(3, 180);
+    sheet.setColumnWidth(4, 340);
+    sheet.setColumnWidth(5, 90);
+    sheet.setColumnWidth(6, 110);
+    sheet.setColumnWidth(7, 140);
+    sheet.getRange("D2:D").setWrap(true).setVerticalAlignment("top");
+  }
 }
 
 /**

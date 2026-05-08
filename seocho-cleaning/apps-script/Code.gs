@@ -40,9 +40,14 @@ function doPost(e) {
 function doGet(e) {
   try {
     const action = e.parameter.action;
-    const adminKey = e.parameter.adminKey;
 
-    // 인증
+    // config 는 시니어 페이지·관리자 양식 등에서 모두 사용 → 인증 없이 공개
+    if (action === "config") {
+      return jsonResponse({ success: true, data: getConfig() });
+    }
+
+    // 그 외 (stats 등)은 관리자 인증 필요
+    const adminKey = e.parameter.adminKey;
     const expectedKey = PropertiesService.getScriptProperties().getProperty("ADMIN_KEY");
     if (!expectedKey || adminKey !== expectedKey) {
       return jsonResponse({ success: false, error: "권한 없음" });
@@ -58,6 +63,94 @@ function doGet(e) {
     logError("doGet", err);
     return jsonResponse({ success: false, error: String(err) });
   }
+}
+
+// ============================================================
+// Config 시트 읽기
+// 운영자가 Sheets에서 편집한 점검 항목/점검자/시간대를 그대로 반환
+// ============================================================
+function getConfig() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  // 시설 정보
+  const orgSheet = ss.getSheetByName("Config_시설");
+  const org = { name: "", department: "" };
+  if (orgSheet && orgSheet.getLastRow() >= 2) {
+    const orgRows = orgSheet.getRange(2, 1, orgSheet.getLastRow() - 1, 2).getValues();
+    orgRows.forEach(function (row) {
+      const key = String(row[0] || "").trim();
+      const value = String(row[1] || "").trim();
+      if (key === "name") org.name = value;
+      else if (key === "department") org.department = value;
+    });
+  }
+
+  // 시간대
+  const tsSheet = ss.getSheetByName("Config_시간대");
+  let timeSlots = [];
+  if (tsSheet && tsSheet.getLastRow() >= 2) {
+    const rows = tsSheet.getRange(2, 1, tsSheet.getLastRow() - 1, 4).getValues();
+    timeSlots = rows
+      .filter(function (r) { return r[0]; })
+      .map(function (r) {
+        return {
+          id: String(r[0]).trim(),
+          label: String(r[1] || "").trim(),
+          startHour: Number(r[2]) || 0,
+          endHour: Number(r[3]) || 0,
+        };
+      });
+  }
+
+  // 점검자
+  const wSheet = ss.getSheetByName("Config_점검자");
+  let workers = [];
+  if (wSheet && wSheet.getLastRow() >= 2) {
+    const rows = wSheet.getRange(2, 1, wSheet.getLastRow() - 1, 3).getValues();
+    workers = rows
+      .filter(function (r) { return r[0]; })
+      .map(function (r) {
+        return {
+          id: String(r[0]).trim(),
+          name: String(r[1] || "").trim(),
+          timeSlotId: String(r[2] || "").trim(),
+        };
+      });
+  }
+
+  // 점검 항목
+  const iSheet = ss.getSheetByName("Config_점검항목");
+  let items = [];
+  if (iSheet && iSheet.getLastRow() >= 2) {
+    const rows = iSheet.getRange(2, 1, iSheet.getLastRow() - 1, 7).getValues();
+    items = rows
+      .filter(function (r) { return r[1]; }) // ID 있는 행만
+      .sort(function (a, b) { return (Number(a[0]) || 0) - (Number(b[0]) || 0); })
+      .map(function (r) {
+        const item = {
+          id: String(r[1]).trim(),
+          name: String(r[2] || "").trim(),
+          questions: String(r[3] || "")
+            .split(/\r?\n/)
+            .map(function (s) { return s.trim(); })
+            .filter(Boolean),
+        };
+        const floors = String(r[4] || "").trim();
+        if (floors) item.floors = floors;
+        const frequency = String(r[5] || "").trim();
+        if (frequency) item.frequency = frequency;
+        const slotsStr = String(r[6] || "").trim();
+        if (slotsStr) {
+          item.slots = slotsStr
+            .split(",")
+            .map(function (s) { return s.trim(); })
+            .filter(Boolean);
+        }
+        return item;
+      });
+  }
+
+  return { org: org, timeSlots: timeSlots, workers: workers, items: items };
 }
 
 // ============================================================

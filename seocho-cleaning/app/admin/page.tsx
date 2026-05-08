@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { TIME_SLOTS, WORKERS, formatDate } from "@/lib/config";
+import { formatDate } from "@/lib/config";
+import { useConfig } from "@/lib/useConfig";
 import PhotoGallery from "@/components/admin/PhotoGallery";
 import type { PhotoEntry } from "@/components/admin/Lightbox";
 
@@ -30,6 +31,8 @@ type StatsData = {
 };
 
 export default function AdminPage() {
+  const { timeSlots: TIME_SLOTS, workers: WORKERS } = useConfig();
+
   const [adminKey, setAdminKey] = useState("");
   const [authed, setAuthed] = useState(false);
   const [previewMode, setPreviewMode] = useState(false);
@@ -167,7 +170,7 @@ export default function AdminPage() {
           : 0,
       };
     });
-  }, [data]);
+  }, [data, TIME_SLOTS, WORKERS]);
 
   // 사진이 첨부된 조치필요 항목 (갤러리용)
   const photos = useMemo<PhotoEntry[]>(() => {

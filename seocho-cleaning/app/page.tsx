@@ -2,10 +2,6 @@
 
 import { useState, useEffect, useMemo } from "react";
 import {
-  ORG_INFO,
-  WORKERS,
-  TIME_SLOTS,
-  CHECKLIST_ITEMS,
   detectTimeSlot,
   formatDate,
   getKoreanDay,
@@ -13,11 +9,14 @@ import {
   type Submission,
   type TimeSlot,
 } from "@/lib/config";
+import { useConfig } from "@/lib/useConfig";
 import CheckItem from "@/components/CheckItem";
 
 type Status = "idle" | "submitting" | "success" | "error";
 
 export default function HomePage() {
+  const { org: ORG_INFO, workers: WORKERS, timeSlots: TIME_SLOTS, items: CHECKLIST_ITEMS } = useConfig();
+
   const [workerId, setWorkerId] = useState<string>("");
   const [timeSlot, setTimeSlot] = useState<TimeSlot | null>(null);
   const [results, setResults] = useState<Record<string, CheckResult>>({});
@@ -29,12 +28,13 @@ export default function HomePage() {
   useEffect(() => {
     const n = new Date();
     setNow(n);
-    const detected = detectTimeSlot(n);
+    const detected = detectTimeSlot(n, TIME_SLOTS);
     setTimeSlot(detected);
     // 시간대 담당 근로자를 자동으로 선택
     const defaultWorker = WORKERS.find((w) => w.timeSlotId === detected.id);
     if (defaultWorker) setWorkerId(defaultWorker.id);
     setSubmissionId(generateSubmissionId());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // 시간대 변경 시 해당 시간대 담당자로 자동 전환

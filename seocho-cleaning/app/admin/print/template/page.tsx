@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { CHECKLIST_ITEMS, TIME_SLOTS, WORKERS } from "@/lib/config";
+import { useMemo } from "react";
+import { useConfig } from "@/lib/useConfig";
 
 // 5일 (월~금)
 const WEEKDAYS = [
@@ -12,21 +13,26 @@ const WEEKDAYS = [
   { key: "fri", label: "금" },
 ];
 
-const SLOT_INFO = TIME_SLOTS.map((s) => {
-  const w = WORKERS.find((wk) => wk.timeSlotId === s.id);
-  return {
-    ...s,
-    worker: w?.name || "",
-    initial: w?.name?.charAt(0) || "",
-    short: s.label.replace(/:00/g, "").replace(" ~ ", "-"),
-  };
-});
-
 export default function WeeklyTemplatePage() {
   const router = useRouter();
+  const { org, items: CHECKLIST_ITEMS, timeSlots: TIME_SLOTS, workers: WORKERS } = useConfig();
+
+  const slotInfo = useMemo(
+    () =>
+      TIME_SLOTS.map((s) => {
+        const w = WORKERS.find((wk) => wk.timeSlotId === s.id);
+        return {
+          ...s,
+          worker: w?.name || "",
+          initial: w?.name?.charAt(0) || "",
+          short: s.label.replace(/:00/g, "").replace(" ~ ", "-"),
+        };
+      }),
+    [TIME_SLOTS, WORKERS]
+  );
 
   const handleExcelDownload = () => {
-    const html = buildExcelHtml();
+    const html = buildExcelHtml(org.name, CHECKLIST_ITEMS, slotInfo);
     const bom = "﻿";
     const blob = new Blob([bom + html], {
       type: "application/vnd.ms-excel;charset=utf-8;",
@@ -96,9 +102,7 @@ export default function WeeklyTemplatePage() {
               <h1 className="text-[18px] font-bold tracking-tight">
                 청소점검 주간 체크리스트
               </h1>
-              <p className="text-[11px] text-ink-700">
-                서초여성가족플라자 서초센터
-              </p>
+              <p className="text-[11px] text-ink-700">{org.name}</p>
             </header>
 
             {/* 주차 입력 */}
@@ -147,7 +151,7 @@ export default function WeeklyTemplatePage() {
                 </tr>
                 <tr>
                   {WEEKDAYS.flatMap((d) =>
-                    SLOT_INFO.map((s) => (
+                    slotInfo.map((s) => (
                       <th
                         key={`${d.key}-${s.id}`}
                         className="border border-ink-700 px-0.5 py-0.5 bg-ink-50 text-[11px] font-bold text-center"
@@ -181,7 +185,7 @@ export default function WeeklyTemplatePage() {
                       </div>
                     </td>
                     {WEEKDAYS.flatMap((d) =>
-                      SLOT_INFO.map((s) => {
+                      slotInfo.map((s) => {
                         const skip = item.slots && !item.slots.includes(s.id);
                         return (
                           <td
@@ -233,7 +237,7 @@ export default function WeeklyTemplatePage() {
 
             {/* 서명 */}
             <div className="print-signature grid grid-cols-4 gap-3">
-              {SLOT_INFO.map((s) => (
+              {slotInfo.map((s) => (
                 <div key={s.id} className="text-center">
                   <p className="text-[10px] text-ink-700 mb-5">{s.worker}</p>
                   <div className="border-b border-black h-0.5"></div>
@@ -258,7 +262,24 @@ export default function WeeklyTemplatePage() {
 // 엑셀 다운로드 (HTML → .xls)
 // 동일한 주간 양식, 가로 A4에 맞춰 셀 너비 지정
 // ============================================
-function buildExcelHtml(): string {
+type SlotForExcel = {
+  id: string;
+  worker: string;
+  initial: string;
+  short: string;
+};
+type ItemForExcel = {
+  id: string;
+  name: string;
+  floors?: string;
+  frequency?: string;
+  slots?: string[];
+};
+function buildExcelHtml(
+  orgName: string,
+  items: ItemForExcel[],
+  slotInfo: SlotForExcel[]
+): string {
   // 헤더 행 1: 점검 항목 + 5개 요일 (각 3 열 병합)
   const dayHeaderCells = WEEKDAYS.map(
     (d) =>
@@ -267,14 +288,14 @@ function buildExcelHtml(): string {
 
   // 헤더 행 2: 점검자 이니셜 (5일 × 3교대 = 15개)
   const initialHeaderCells = WEEKDAYS.flatMap(() =>
-    SLOT_INFO.map(
+    slotInfo.map(
       (s) =>
         `<th style="border:1px solid #555;background:#f3f4f6;padding:3px;text-align:center;font-size:10px;">${s.initial}</th>`
     )
   ).join("");
 
   // 항목 행
-  const itemRows = CHECKLIST_ITEMS.map((item, idx) => {
+  const itemRows = items.map((item, idx) => {
     const meta: string[] = [];
     if (item.floors) meta.push(`(${item.floors})`);
     if (item.frequency === "weekly") meta.push("주1회");
@@ -283,7 +304,7 @@ function buildExcelHtml(): string {
       : "";
 
     const dayCells = WEEKDAYS.flatMap(() =>
-      SLOT_INFO.map((s) => {
+      slotInfo.map((s) => {
         const skip = item.slots && !item.slots.includes(s.id);
         if (skip) {
           return `<td style="border:1px solid #555;background:#e5e7eb;text-align:center;color:#999;height:24px;">▨</td>`;
@@ -335,7 +356,7 @@ function buildExcelHtml(): string {
 </head>
 <body>
   <h1>청소점검 주간 체크리스트</h1>
-  <div style="font-size:11px;color:#444;">서초여성가족플라자 서초센터</div>
+  <div style="font-size:11px;color:#444;">${orgName}</div>
   <br/>
 
   <table>
@@ -376,7 +397,7 @@ function buildExcelHtml(): string {
   <br/><br/>
   <table>
     <tr>
-      ${SLOT_INFO.map(
+      ${slotInfo.map(
         (s) => `<td style="border-bottom:1px solid #000;text-align:center;width:25%;padding-top:30px;font-size:10px;">
           ${s.worker} 서명<br/><small style="color:#666;">${s.short}</small>
         </td>`

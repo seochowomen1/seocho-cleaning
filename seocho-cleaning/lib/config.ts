@@ -157,14 +157,17 @@ export type Submission = {
 // 헬퍼 함수
 // ============================================
 
-/** 현재 시각 기준 자동 시간대 감지 */
-export function detectTimeSlot(now: Date = new Date()): TimeSlot {
+/** 현재 시각 기준 자동 시간대 감지 (slots 배열을 함수 인자로 받음 — 동적 config 지원) */
+export function detectTimeSlot(
+  now: Date = new Date(),
+  slots: TimeSlot[] = TIME_SLOTS
+): TimeSlot {
   const hour = now.getHours();
-  const matched = TIME_SLOTS.find((s) => hour >= s.startHour && hour < s.endHour);
-  // 시간 외 (이른 아침 / 늦은 저녁)에는 가장 가까운 슬롯 반환
+  const matched = slots.find((s) => hour >= s.startHour && hour < s.endHour);
   if (matched) return matched;
-  if (hour < 9) return TIME_SLOTS[0];
-  return TIME_SLOTS[TIME_SLOTS.length - 1];
+  // 시간 외 (이른 아침 / 늦은 저녁)에는 가장 가까운 슬롯 반환
+  if (hour < (slots[0]?.startHour ?? 9)) return slots[0];
+  return slots[slots.length - 1];
 }
 
 /** YYYY-MM-DD 형식으로 변환 */
