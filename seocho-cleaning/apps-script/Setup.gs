@@ -59,18 +59,15 @@ function setupSheets() {
     sub.setColumnWidth(10, 160); // 제출시각
     sub.setColumnWidth(11, 220); // 제출ID
 
-    // 등급 열 조건부 서식 (A=초록, B=노랑, C=빨강)
+    // 등급 열 조건부 서식 (O=초록 양호, X=빨강 불량)
     const gradeRange = sub.getRange("G2:G");
     const rules = sub.getConditionalFormatRules();
     rules.push(
       SpreadsheetApp.newConditionalFormatRule()
-        .whenTextEqualTo("A").setBackground("#E2EFDA").setFontColor("#173404")
+        .whenTextEqualTo("O").setBackground("#E2EFDA").setFontColor("#173404")
         .setRanges([gradeRange]).build(),
       SpreadsheetApp.newConditionalFormatRule()
-        .whenTextEqualTo("B").setBackground("#FFF2CC").setFontColor("#412402")
-        .setRanges([gradeRange]).build(),
-      SpreadsheetApp.newConditionalFormatRule()
-        .whenTextEqualTo("C").setBackground("#FCE4D6").setFontColor("#501313").setBold(true)
+        .whenTextEqualTo("X").setBackground("#FCE4D6").setFontColor("#501313").setBold(true)
         .setRanges([gradeRange]).build()
     );
     sub.setConditionalFormatRules(rules);
@@ -219,9 +216,9 @@ function testNotification() {
     timeSlotLabel: "12:00 ~ 15:00",
     workerName: "테스트 점검자",
   };
-  const cResults = [
+  const xResults = [
     { itemName: "강의용 책상", note: "테스트 알림입니다", photoUrl: "" },
   ];
-  sendCAlertEmail(submission, cResults);
+  sendXAlertEmail(submission, xResults);
   Logger.log("✅ 테스트 이메일 발송 완료. 받은 메일함 확인하세요.");
 }

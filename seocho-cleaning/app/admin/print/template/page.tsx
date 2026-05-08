@@ -298,9 +298,8 @@ export default function WeeklyTemplatePage() {
 
             {/* 범례 */}
             <p className="text-[10px] text-ink-800 mb-3 leading-relaxed">
-              <b>평가:</b> <b className="text-emerald-700">A</b> 양호&nbsp;·&nbsp;
-              <b className="text-amber-700">B</b> 보통&nbsp;·&nbsp;
-              <b className="text-rose-700">C</b> 조치필요
+              <b>평가:</b> <b className="text-emerald-700">O</b> 양호&nbsp;·&nbsp;
+              <b className="text-rose-700">X</b> 불량
               {view === "all" && (
                 <>
                   &nbsp;&nbsp;|&nbsp;&nbsp;<span className="text-ink-500">▨ 해당없음</span>
@@ -315,7 +314,7 @@ export default function WeeklyTemplatePage() {
             {/* 특이사항 */}
             <section className="mb-3">
               <h2 className="text-[11px] font-bold mb-1">
-                특이사항 / 조치필요 내용
+                특이사항 / 불량 내용
               </h2>
               <div className="border border-ink-700">
                 <div className="border-b border-ink-300 h-[6mm] px-2 py-0.5 text-[9px] text-ink-300">
@@ -494,11 +493,11 @@ function buildExcelAllHtml(
   </table>
 
   <p style="font-size:10px;color:#444;margin-top:8px;">
-    평가: A 양호 · B 보통 · C 조치필요  |  ▨ 해당없음  |
+    평가: O 양호 · X 불량  |  ▨ 해당없음  |
     김 = 김성만 (09:00~12:00) · 배 = 배정열 (12:00~15:00) · 조 = 조숙임 (15:00~18:00)
   </p>
 
-  <h2>특이사항 / 조치필요 내용</h2>
+  <h2>특이사항 / 불량 내용</h2>
   <table>
     <tr><td style="border:1px solid #555;height:30px;">&nbsp;</td></tr>
     <tr><td style="border:1px solid #555;height:30px;">&nbsp;</td></tr>
@@ -611,9 +610,9 @@ function buildExcelSingleHtml(
     </tbody>
   </table>
   <p style="font-size:11px;color:#444;margin-top:8px;">
-    평가: A 양호 · B 보통 · C 조치필요
+    평가: O 양호 · X 불량
   </p>
-  <h2>특이사항 / 조치필요 내용</h2>
+  <h2>특이사항 / 불량 내용</h2>
   <table>
     <tr><td style="border:1px solid #555;height:30px;">&nbsp;</td></tr>
     <tr><td style="border:1px solid #555;height:30px;">&nbsp;</td></tr>

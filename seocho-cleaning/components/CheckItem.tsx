@@ -18,32 +18,21 @@ const GRADE_COLORS: Record<
     badgeText: string;
     cardBg: string;
     cardBorder: string;
-    accent: string;
   }
 > = {
-  A: {
+  O: {
     bar: "bg-emerald-500",
     badgeBg: "bg-emerald-500",
     badgeText: "text-white",
     cardBg: "bg-emerald-50/50",
     cardBorder: "border-emerald-200",
-    accent: "emerald",
   },
-  B: {
-    bar: "bg-amber-500",
-    badgeBg: "bg-amber-500",
-    badgeText: "text-white",
-    cardBg: "bg-amber-50/50",
-    cardBorder: "border-amber-200",
-    accent: "amber",
-  },
-  C: {
+  X: {
     bar: "bg-rose-500",
     badgeBg: "bg-rose-500",
     badgeText: "text-white",
     cardBg: "bg-rose-50/50",
     cardBorder: "border-rose-300",
-    accent: "rose",
   },
 };
 
@@ -57,7 +46,7 @@ export default function CheckItem({ item, index, value, onChange }: Props) {
     if (typeof navigator !== "undefined" && navigator.vibrate) {
       navigator.vibrate(15);
     }
-    if (grade !== "C") {
+    if (grade === "O") {
       setPhotoPreview(null);
       onChange({ itemId: item.id, itemName: item.name, grade });
     } else {
@@ -91,7 +80,7 @@ export default function CheckItem({ item, index, value, onChange }: Props) {
   };
 
   const grade = value?.grade;
-  const isC = grade === "C";
+  const isX = grade === "X";
   const isDone = !!grade;
   const palette = grade ? GRADE_COLORS[grade] : null;
 
@@ -138,47 +127,42 @@ export default function CheckItem({ item, index, value, onChange }: Props) {
               </span>
             )}
           </div>
-          <ul className="mt-2 space-y-1">
-            {item.questions.map((q, i) => (
-              <li
-                key={i}
-                className="text-[13px] text-ink-600 leading-relaxed flex gap-1.5"
-              >
-                <span className="text-ink-400 shrink-0 select-none">•</span>
-                <span>{q}</span>
-              </li>
-            ))}
-          </ul>
+          {item.questions.length > 0 && (
+            <ul className="mt-2 space-y-1">
+              {item.questions.map((q, i) => (
+                <li
+                  key={i}
+                  className="text-[13px] text-ink-600 leading-relaxed flex gap-1.5"
+                >
+                  <span className="text-ink-400 shrink-0 select-none">•</span>
+                  <span>{q}</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
 
-      {/* 등급 버튼 그룹 */}
-      <div className="grid grid-cols-3 gap-2">
+      {/* 등급 버튼 (양호 O / 불량 X) */}
+      <div className="grid grid-cols-2 gap-2">
         <GradeButton
-          grade="A"
+          grade="O"
           label="양호"
-          desc="정리 깔끔"
-          selected={grade === "A"}
-          onClick={() => setGrade("A")}
+          desc="정상"
+          selected={grade === "O"}
+          onClick={() => setGrade("O")}
         />
         <GradeButton
-          grade="B"
-          label="보통"
-          desc="가볍게 정리"
-          selected={grade === "B"}
-          onClick={() => setGrade("B")}
-        />
-        <GradeButton
-          grade="C"
-          label="조치필요"
+          grade="X"
+          label="불량"
           desc="사무실 보고"
-          selected={grade === "C"}
-          onClick={() => setGrade("C")}
+          selected={grade === "X"}
+          onClick={() => setGrade("X")}
         />
       </div>
 
-      {/* C 등급 입력 영역 */}
-      {isC && (
+      {/* X 등급 입력 영역 */}
+      {isX && (
         <div className="mt-4 space-y-3 animate-pop-in">
           <div>
             <label className="block text-[11px] font-bold tracking-wider text-rose-700 uppercase mb-1.5">
@@ -261,17 +245,12 @@ function GradeButton({
   onClick: () => void;
 }) {
   const styles: Record<GradeId, { sel: string; unsel: string }> = {
-    A: {
+    O: {
       sel: "bg-emerald-500 border-emerald-500 text-white shadow-md shadow-emerald-200",
       unsel:
         "bg-white border-ink-200 text-ink-700 hover:border-emerald-300 hover:bg-emerald-50/50",
     },
-    B: {
-      sel: "bg-amber-500 border-amber-500 text-white shadow-md shadow-amber-200",
-      unsel:
-        "bg-white border-ink-200 text-ink-700 hover:border-amber-300 hover:bg-amber-50/50",
-    },
-    C: {
+    X: {
       sel: "bg-rose-500 border-rose-500 text-white shadow-md shadow-rose-200",
       unsel:
         "bg-white border-ink-200 text-ink-700 hover:border-rose-300 hover:bg-rose-50/50",
@@ -285,19 +264,13 @@ function GradeButton({
       onClick={onClick}
       className={`grade-btn h-16 rounded-2xl border-2 font-bold flex flex-col items-center justify-center ${style}`}
     >
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1.5">
+        <span className="text-lg leading-none font-extrabold">{grade}</span>
         <span className="text-base leading-none">{label}</span>
-        <span
-          className={`text-[10px] tracking-widest ${
-            selected ? "text-white/85" : "text-ink-400"
-          }`}
-        >
-          {grade}
-        </span>
       </div>
       <span
         className={`text-[10px] mt-1 ${
-          selected ? "text-white/80" : "text-ink-400"
+          selected ? "text-white/85" : "text-ink-400"
         }`}
       >
         {desc}

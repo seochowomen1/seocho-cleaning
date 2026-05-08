@@ -172,7 +172,7 @@ function handleSubmit(submission) {
     // 멱등성: 동일 submissionId 가 이미 저장돼 있으면 바로 성공 응답 (중복 제출/재시도 방지)
     const submissionId = String(submission.submissionId || "");
     if (submissionId && isSubmissionIdRecorded(sheet, submissionId)) {
-      return { success: true, duplicated: true, rowsAdded: 0, cCount: 0 };
+      return { success: true, duplicated: true, rowsAdded: 0, xCount: 0 };
     }
 
     const now = new Date();
@@ -183,13 +183,13 @@ function handleSubmit(submission) {
 
     // 결과별로 행 추가
     const rows = [];
-    const cResults = []; // 알림용
+    const xResults = []; // 알림용
 
     submission.results.forEach((r) => {
       const itemName = r.itemName || getItemName(r.itemId);
       let photoUrl = "";
 
-      if (r.grade === "C" && r.photoBase64 && photoFolderId) {
+      if (r.grade === "X" && r.photoBase64 && photoFolderId) {
         try {
           photoUrl = uploadPhoto(
             r.photoBase64,
@@ -215,8 +215,8 @@ function handleSubmit(submission) {
         submissionId,
       ]);
 
-      if (r.grade === "C") {
-        cResults.push({
+      if (r.grade === "X") {
+        xResults.push({
           itemName,
           note: r.note || "",
           photoUrl,
@@ -226,22 +226,22 @@ function handleSubmit(submission) {
 
     sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, rows[0].length).setValues(rows);
 
-    // C 등급 발생 시 알림
-    if (cResults.length > 0) {
+    // X 등급(불량) 발생 시 알림
+    if (xResults.length > 0) {
       try {
-        sendCAlertEmail(submission, cResults);
+        sendXAlertEmail(submission, xResults);
       } catch (err) {
-        logError("sendCAlertEmail", err);
+        logError("sendXAlertEmail", err);
       }
       // 알림톡 (선택, 솔라피 등 외부 API 연동)
       try {
-        sendCAlertKakao(submission, cResults);
+        sendXAlertKakao(submission, xResults);
       } catch (err) {
-        logError("sendCAlertKakao", err);
+        logError("sendXAlertKakao", err);
       }
     }
 
-    return { success: true, rowsAdded: rows.length, cCount: cResults.length };
+    return { success: true, rowsAdded: rows.length, xCount: xResults.length };
   } finally {
     lock.releaseLock();
   }
@@ -313,11 +313,11 @@ function handleStats(days) {
         workerName,
         submittedAt,
         results: [],
-        hasC: false,
+        hasX: false,
       };
     }
     grouped[key].results.push({ itemId, itemName, grade, note, photoUrl });
-    if (grade === "C") grouped[key].hasC = true;
+    if (grade === "X") grouped[key].hasX = true;
   });
 
   const submissions = Object.values(grouped).sort((a, b) => {
@@ -326,7 +326,7 @@ function handleStats(days) {
 
   // 통계 계산
   const totalSubmissions = submissions.length;
-  const cCount = filtered.filter((row) => row[6] === "C").length;
+  const xCount = filtered.filter((row) => row[6] === "X").length;
   const expectedSubmissions = days * 3; // 하루 3타임 가정 (필요 시 조정)
   const completionRate =
     expectedSubmissions > 0
@@ -338,7 +338,7 @@ function handleStats(days) {
     data: {
       totalSubmissions,
       completionRate: Math.min(completionRate, 100),
-      cCount,
+      xCount,
       submissions,
     },
   };
@@ -348,7 +348,7 @@ function emptyStats() {
   return {
     totalSubmissions: 0,
     completionRate: 0,
-    cCount: 0,
+    xCount: 0,
     submissions: [],
   };
 }

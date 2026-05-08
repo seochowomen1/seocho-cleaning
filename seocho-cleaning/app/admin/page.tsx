@@ -16,17 +16,17 @@ type Submission = {
   results: {
     itemId: string;
     itemName: string;
-    grade: "A" | "B" | "C";
+    grade: "O" | "X";
     note?: string;
     photoUrl?: string;
   }[];
-  hasC: boolean;
+  hasX: boolean;
 };
 
 type StatsData = {
   totalSubmissions: number;
   completionRate: number;
-  cCount: number;
+  xCount: number;
   submissions: Submission[];
 };
 
@@ -40,7 +40,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [days, setDays] = useState(7);
-  const [filterC, setFilterC] = useState(false);
+  const [filterX, setFilterX] = useState(false);
   const [filterWorker, setFilterWorker] = useState("");
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [activeTab, setActiveTab] = useState<AdminTab>("dashboard");
@@ -114,16 +114,15 @@ export default function AdminPage() {
   };
 
   const gradeDist = useMemo(() => {
-    if (!data) return { A: 0, B: 0, C: 0, total: 0 };
-    let A = 0, B = 0, C = 0;
+    if (!data) return { O: 0, X: 0, total: 0 };
+    let O = 0, X = 0;
     data.submissions.forEach((s) =>
       s.results.forEach((r) => {
-        if (r.grade === "A") A++;
-        else if (r.grade === "B") B++;
-        else if (r.grade === "C") C++;
+        if (r.grade === "O") O++;
+        else if (r.grade === "X") X++;
       })
     );
-    return { A, B, C, total: A + B + C };
+    return { O, X, total: O + X };
   }, [data]);
 
   const workerList = useMemo(() => {
@@ -134,11 +133,11 @@ export default function AdminPage() {
   // 점검자별 제출 건수
   const workerStats = useMemo(() => {
     if (!data) return [];
-    const map = new Map<string, { total: number; c: number }>();
+    const map = new Map<string, { total: number; x: number }>();
     data.submissions.forEach((s) => {
-      const cur = map.get(s.workerName) || { total: 0, c: 0 };
+      const cur = map.get(s.workerName) || { total: 0, x: 0 };
       cur.total++;
-      if (s.hasC) cur.c++;
+      if (s.hasX) cur.x++;
       map.set(s.workerName, cur);
     });
     return Array.from(map.entries())
@@ -165,20 +164,20 @@ export default function AdminPage() {
         worker,
         submission,
         state,
-        cCount: submission
-          ? submission.results.filter((r) => r.grade === "C").length
+        xCount: submission
+          ? submission.results.filter((r) => r.grade === "X").length
           : 0,
       };
     });
   }, [data, TIME_SLOTS, WORKERS]);
 
-  // 사진이 첨부된 조치필요 항목 (갤러리용)
+  // 사진이 첨부된 불량 항목 (갤러리용)
   const photos = useMemo<PhotoEntry[]>(() => {
     if (!data) return [];
     const list: PhotoEntry[] = [];
     data.submissions.forEach((s) =>
       s.results.forEach((r) => {
-        if (r.grade === "C" && r.photoUrl) {
+        if (r.grade === "X" && r.photoUrl) {
           list.push({
             photoUrl: r.photoUrl,
             itemName: r.itemName,
@@ -194,13 +193,13 @@ export default function AdminPage() {
     return list;
   }, [data]);
 
-  // 항목별 조치필요 빈도 (어떤 항목이 자주 문제인지)
+  // 항목별 불량 빈도 (어떤 항목이 자주 문제인지)
   const itemIssues = useMemo(() => {
     if (!data) return [];
     const map = new Map<string, number>();
     data.submissions.forEach((s) =>
       s.results.forEach((r) => {
-        if (r.grade === "C") {
+        if (r.grade === "X") {
           map.set(r.itemName, (map.get(r.itemName) || 0) + 1);
         }
       })
@@ -214,10 +213,10 @@ export default function AdminPage() {
     if (!data) return [];
     return data.submissions.filter(
       (s) =>
-        (!filterC || s.hasC) &&
+        (!filterX || s.hasX) &&
         (!filterWorker || s.workerName === filterWorker)
     );
-  }, [data, filterC, filterWorker]);
+  }, [data, filterX, filterWorker]);
 
   const exportCSV = () => {
     if (!filteredSubmissions.length) return;
@@ -439,11 +438,11 @@ export default function AdminPage() {
           <label className="inline-flex items-center gap-2 h-10 px-3 rounded-xl border border-ink-200 bg-white shadow-soft cursor-pointer hover:border-ink-300">
             <input
               type="checkbox"
-              checked={filterC}
-              onChange={(e) => setFilterC(e.target.checked)}
+              checked={filterX}
+              onChange={(e) => setFilterX(e.target.checked)}
               className="w-4 h-4"
             />
-            <span className="text-sm font-medium text-ink-700">조치필요만</span>
+            <span className="text-sm font-medium text-ink-700">불량만</span>
           </label>
 
           <div className="ml-auto flex flex-wrap gap-2">
@@ -572,11 +571,11 @@ export default function AdminPage() {
                 progress={data.completionRate}
               />
               <KpiCard
-                label="조치필요"
-                value={data.cCount}
+                label="불량"
+                value={data.xCount}
                 unit="건"
-                hint={data.cCount > 0 ? "확인 요망" : "이상 없음"}
-                tone={data.cCount > 0 ? "rose" : "ink"}
+                hint={data.xCount > 0 ? "확인 요망" : "이상 없음"}
+                tone={data.xCount > 0 ? "rose" : "ink"}
               />
               <KpiCard
                 label="활동 점검자"
@@ -602,20 +601,16 @@ export default function AdminPage() {
                 ) : (
                   <>
                     <div className="flex h-3 rounded-full overflow-hidden bg-ink-100">
-                      {gradeDist.A > 0 && (
-                        <div className="bg-emerald-500" style={{ width: `${(gradeDist.A / gradeDist.total) * 100}%` }} />
+                      {gradeDist.O > 0 && (
+                        <div className="bg-emerald-500" style={{ width: `${(gradeDist.O / gradeDist.total) * 100}%` }} />
                       )}
-                      {gradeDist.B > 0 && (
-                        <div className="bg-amber-500" style={{ width: `${(gradeDist.B / gradeDist.total) * 100}%` }} />
-                      )}
-                      {gradeDist.C > 0 && (
-                        <div className="bg-rose-500" style={{ width: `${(gradeDist.C / gradeDist.total) * 100}%` }} />
+                      {gradeDist.X > 0 && (
+                        <div className="bg-rose-500" style={{ width: `${(gradeDist.X / gradeDist.total) * 100}%` }} />
                       )}
                     </div>
-                    <div className="grid grid-cols-3 gap-2 mt-4">
-                      <DistLegend color="emerald" label="양호" grade="A" count={gradeDist.A} total={gradeDist.total} />
-                      <DistLegend color="amber" label="보통" grade="B" count={gradeDist.B} total={gradeDist.total} />
-                      <DistLegend color="rose" label="조치필요" grade="C" count={gradeDist.C} total={gradeDist.total} />
+                    <div className="grid grid-cols-2 gap-2 mt-4">
+                      <DistLegend color="emerald" label="양호" grade="O" count={gradeDist.O} total={gradeDist.total} />
+                      <DistLegend color="rose" label="불량" grade="X" count={gradeDist.X} total={gradeDist.total} />
                     </div>
                   </>
                 )}
@@ -639,9 +634,9 @@ export default function AdminPage() {
                           </p>
                           <p className="text-[11px] text-ink-500">
                             {w.total}건 제출
-                            {w.c > 0 && (
+                            {w.x > 0 && (
                               <span className="ml-1.5 text-rose-600 font-semibold">
-                                · C {w.c}
+                                · X {w.x}
                               </span>
                             )}
                           </p>
@@ -656,7 +651,7 @@ export default function AdminPage() {
               </div>
             </div>
 
-            {/* ===== 항목별 조치필요 빈도 ===== */}
+            {/* ===== 항목별 불량 빈도 ===== */}
             <ItemIssuesPanel
               items={itemIssues}
               onItemClick={(name) => setDrillItem(name)}
@@ -683,10 +678,10 @@ export default function AdminPage() {
                     {filteredSubmissions.length}건
                   </span>
                 </h3>
-                {(filterC || filterWorker) && (
+                {(filterX || filterWorker) && (
                   <button
                     onClick={() => {
-                      setFilterC(false);
+                      setFilterX(false);
                       setFilterWorker("");
                     }}
                     className="text-[11px] text-ink-500 hover:text-ink-900 font-medium"
@@ -887,7 +882,7 @@ function TodayStatusPanel({
     worker: { name: string } | undefined;
     submission: Submission | undefined;
     state: "done" | "pending" | "missed";
-    cCount: number;
+    xCount: number;
   }[];
 }) {
   const today = new Date();
@@ -917,14 +912,14 @@ function TodayStatusPanel({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        {slots.map(({ slot, worker, submission, state, cCount }) => (
+        {slots.map(({ slot, worker, submission, state, xCount }) => (
           <TodaySlotCard
             key={slot.id}
             slotLabel={slot.label}
             workerName={worker?.name || "—"}
             state={state}
             submittedAt={submission?.submittedAt}
-            cCount={cCount}
+            xCount={xCount}
           />
         ))}
       </div>
@@ -937,13 +932,13 @@ function TodaySlotCard({
   workerName,
   state,
   submittedAt,
-  cCount,
+  xCount,
 }: {
   slotLabel: string;
   workerName: string;
   state: "done" | "pending" | "missed";
   submittedAt?: string;
-  cCount: number;
+  xCount: number;
 }) {
   const tone =
     state === "done"
@@ -1044,8 +1039,8 @@ function TodaySlotCard({
         {state === "done" && (
           <div className="flex items-center gap-2 text-[11px] text-ink-600">
             {submittedTime && <span>{submittedTime} 제출</span>}
-            {cCount > 0 && (
-              <span className="text-rose-700 font-bold">조치 {cCount}</span>
+            {xCount > 0 && (
+              <span className="text-rose-700 font-bold">불량 {xCount}</span>
             )}
           </div>
         )}
@@ -1055,7 +1050,7 @@ function TodaySlotCard({
 }
 
 // ============================================
-// 항목별 조치필요 빈도
+// 항목별 불량 빈도
 // ============================================
 function ItemIssuesPanel({
   items,
@@ -1068,10 +1063,10 @@ function ItemIssuesPanel({
     return (
       <div className="bg-white rounded-2xl shadow-soft border border-ink-100 p-5 mb-5">
         <h3 className="text-sm font-bold text-ink-900 mb-1">
-          항목별 조치필요
+          항목별 불량
         </h3>
         <p className="text-xs text-ink-500 mb-3">
-          기간 내 조치필요로 기록된 항목이 없습니다.
+          기간 내 불량으로 기록된 항목이 없습니다.
         </p>
         <EmptyMini text="이상 없음 🎉" />
       </div>
@@ -1083,7 +1078,7 @@ function ItemIssuesPanel({
       <div className="flex items-baseline justify-between mb-4">
         <div>
           <h3 className="text-sm font-bold text-ink-900">
-            항목별 조치필요 빈도
+            항목별 불량 빈도
           </h3>
           <p className="text-[11px] text-ink-500 mt-0.5">
             항목을 누르면 해당 사례를 자세히 볼 수 있어요
@@ -1160,7 +1155,7 @@ function ItemDrillModal({
     }[] = [];
     submissions.forEach((s) =>
       s.results.forEach((r) => {
-        if (r.grade === "C" && r.itemName === itemName) {
+        if (r.grade === "X" && r.itemName === itemName) {
           list.push({
             date: s.date,
             timeSlotLabel: s.timeSlotLabel,
@@ -1203,7 +1198,7 @@ function ItemDrillModal({
         <div className="px-5 md:px-6 py-4 border-b border-ink-100 flex items-center justify-between">
           <div className="min-w-0">
             <p className="text-[11px] font-semibold tracking-wider text-rose-600 uppercase">
-              조치필요 사례
+              불량 사례
             </p>
             <h2 className="text-lg font-bold text-ink-900 tracking-tight truncate">
               {itemName}
@@ -1269,10 +1264,9 @@ function ItemDrillModal({
 }
 
 function SubmissionRow({ submission }: { submission: Submission }) {
-  const [expanded, setExpanded] = useState(submission.hasC);
-  const a = submission.results.filter((r) => r.grade === "A").length;
-  const b = submission.results.filter((r) => r.grade === "B").length;
-  const c = submission.results.filter((r) => r.grade === "C").length;
+  const [expanded, setExpanded] = useState(submission.hasX);
+  const o = submission.results.filter((r) => r.grade === "O").length;
+  const x = submission.results.filter((r) => r.grade === "X").length;
 
   return (
     <li className="px-5 py-4 hover:bg-ink-50/50 transition-colors">
@@ -1285,9 +1279,9 @@ function SubmissionRow({ submission }: { submission: Submission }) {
           <div className="min-w-0">
             <p className="font-semibold text-sm text-ink-900 truncate">
               {submission.workerName}
-              {submission.hasC && (
+              {submission.hasX && (
                 <span className="ml-2 inline-flex items-center px-1.5 h-5 rounded-md bg-rose-100 text-rose-700 text-[10px] font-bold align-middle">
-                  조치필요
+                  불량
                 </span>
               )}
             </p>
@@ -1298,19 +1292,14 @@ function SubmissionRow({ submission }: { submission: Submission }) {
         </div>
         <div className="flex items-center gap-3">
           <div className="hidden sm:flex items-center gap-1 text-[11px]">
-            {a > 0 && (
+            {o > 0 && (
               <span className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 font-bold">
-                A {a}
+                O {o}
               </span>
             )}
-            {b > 0 && (
-              <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 font-bold">
-                B {b}
-              </span>
-            )}
-            {c > 0 && (
+            {x > 0 && (
               <span className="px-1.5 py-0.5 rounded bg-rose-50 text-rose-700 font-bold">
-                C {c}
+                X {x}
               </span>
             )}
           </div>
@@ -1332,10 +1321,8 @@ function SubmissionRow({ submission }: { submission: Submission }) {
             <div key={i} className="text-sm">
               <span
                 className={`inline-flex items-center justify-center w-5 h-5 rounded text-[10px] font-bold mr-2 align-middle ${
-                  r.grade === "A"
+                  r.grade === "O"
                     ? "bg-emerald-100 text-emerald-800"
-                    : r.grade === "B"
-                    ? "bg-amber-100 text-amber-800"
                     : "bg-rose-100 text-rose-800"
                 }`}
               >
@@ -1399,13 +1386,12 @@ function generateMockData(days: number): StatsData {
     { id: "evening", label: "15:00 ~ 18:00", worker: "조숙임", endHour: 18 },
   ];
 
-  // 결정적이지만 그럴듯한 등급 분포 (대부분 A, 가끔 B/C)
-  const pickGrade = (seed: number): "A" | "B" | "C" => {
+  // 결정적이지만 그럴듯한 등급 분포 (대부분 O, 가끔 X)
+  const pickGrade = (seed: number): "O" | "X" => {
     const r = (Math.sin(seed) * 10000) % 1;
     const v = Math.abs(r);
-    if (v < 0.08) return "C";
-    if (v < 0.22) return "B";
-    return "A";
+    if (v < 0.15) return "X";
+    return "O";
   };
   const cNotes: Record<string, string[]> = {
     desk_chair: ["5층 상상1 책상 배열 흐트러짐", "의자 정렬 미흡"],
@@ -1449,12 +1435,12 @@ function generateMockData(days: number): StatsData {
         seed++;
         const grade = pickGrade(seed);
         const note =
-          grade === "C"
+          grade === "X"
             ? cNotes[it.id]?.[seed % (cNotes[it.id]?.length || 1)] || ""
             : undefined;
         // C 등급 중 약 60%에 placeholder 사진 부착 (Picsum)
         const photoUrl =
-          grade === "C" && Math.abs(Math.sin(seed * 1.7)) > 0.4
+          grade === "X" && Math.abs(Math.sin(seed * 1.7)) > 0.4
             ? `https://picsum.photos/seed/sc${seed}/640/480`
             : undefined;
         return {
@@ -1475,20 +1461,20 @@ function generateMockData(days: number): StatsData {
         workerName: slot.worker,
         submittedAt: submittedAt.toISOString(),
         results,
-        hasC: results.some((r) => r.grade === "C"),
+        hasX: results.some((r) => r.grade === "X"),
       });
     }
   }
 
-  const cCount = submissions.reduce(
-    (acc, s) => acc + s.results.filter((r) => r.grade === "C").length,
+  const xCount = submissions.reduce(
+    (acc, s) => acc + s.results.filter((r) => r.grade === "X").length,
     0
   );
 
   return {
     totalSubmissions: submissions.length,
     completionRate: Math.round((submissions.length / (days * 3)) * 100),
-    cCount,
+    xCount,
     submissions,
   };
 }

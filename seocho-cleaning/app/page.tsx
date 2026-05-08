@@ -70,16 +70,16 @@ export default function HomePage() {
   const allComplete = completedCount === totalCount && totalCount > 0;
   const progress = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
 
-  const cWithoutNote = useMemo(
+  const xWithoutNote = useMemo(
     () =>
       applicableResults.filter(
-        (r) => r.grade === "C" && (!r.note || r.note.trim() === "")
+        (r) => r.grade === "X" && (!r.note || r.note.trim() === "")
       ),
     [applicableResults]
   );
 
-  const cCount = useMemo(
-    () => applicableResults.filter((r) => r.grade === "C").length,
+  const xCount = useMemo(
+    () => applicableResults.filter((r) => r.grade === "X").length,
     [applicableResults]
   );
 
@@ -87,7 +87,7 @@ export default function HomePage() {
     workerId !== "" &&
     timeSlot !== null &&
     allComplete &&
-    cWithoutNote.length === 0;
+    xWithoutNote.length === 0;
 
   const handleSubmit = async () => {
     if (!canSubmit || !timeSlot || !now) return;
@@ -125,7 +125,7 @@ export default function HomePage() {
 
   // ====== 성공 화면 ======
   if (status === "success") {
-    return <SuccessScreen timeSlot={timeSlot} cCount={cCount} />;
+    return <SuccessScreen timeSlot={timeSlot} xCount={xCount} />;
   }
 
   return (
@@ -337,10 +337,8 @@ export default function HomePage() {
               {applicableItems.map((it) => {
                 const r = results[it.id];
                 const cls = r
-                  ? r.grade === "A"
+                  ? r.grade === "O"
                     ? "bg-emerald-500"
-                    : r.grade === "B"
-                    ? "bg-amber-500"
                     : "bg-rose-500"
                   : "bg-ink-200";
                 return (
@@ -379,7 +377,7 @@ export default function HomePage() {
           </div>
 
           {/* 안내 메시지 */}
-          {cWithoutNote.length > 0 && (
+          {xWithoutNote.length > 0 && (
             <div className="bg-rose-50 border border-rose-200 rounded-2xl p-4 flex gap-3 animate-slide-up">
               <span className="shrink-0 w-8 h-8 rounded-full bg-rose-500 text-white flex items-center justify-center text-sm font-bold">
                 !
@@ -389,7 +387,7 @@ export default function HomePage() {
                   특이사항이 비어 있습니다
                 </p>
                 <p className="text-rose-700 mt-0.5">
-                  조치필요 항목은 어떤 문제인지 짧게라도 입력해주세요.
+                  불량(X) 항목은 어떤 문제인지 짧게라도 입력해주세요.
                 </p>
               </div>
             </div>
@@ -415,27 +413,23 @@ export default function HomePage() {
           <div className="max-w-md mx-auto p-4">
             {/* 요약 줄 */}
             <div className="flex items-center justify-between mb-3 px-1">
-              <div className="flex items-center gap-3 text-[11px] text-ink-500">
+              <div className="flex items-center gap-4 text-[11px] text-ink-500">
                 <span className="flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                  <span className="font-bold text-ink-800">O</span>
                   <b className="text-ink-800">
-                    {applicableResults.filter((r) => r.grade === "A").length}
-                  </b>
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-amber-500" />
-                  <b className="text-ink-800">
-                    {applicableResults.filter((r) => r.grade === "B").length}
+                    {applicableResults.filter((r) => r.grade === "O").length}
                   </b>
                 </span>
                 <span className="flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full bg-rose-500" />
-                  <b className="text-ink-800">{cCount}</b>
+                  <span className="font-bold text-ink-800">X</span>
+                  <b className="text-ink-800">{xCount}</b>
                 </span>
               </div>
-              {cCount > 0 && (
+              {xCount > 0 && (
                 <p className="text-[11px] font-semibold text-rose-600">
-                  ⚠ 조치필요 {cCount}건은 즉시 알림 발송
+                  ⚠ 불량 {xCount}건은 즉시 알림 발송
                 </p>
               )}
             </div>
@@ -493,10 +487,10 @@ export default function HomePage() {
 // ============================================
 function SuccessScreen({
   timeSlot,
-  cCount,
+  xCount,
 }: {
   timeSlot: TimeSlot | null;
-  cCount: number;
+  xCount: number;
 }) {
   return (
     <div className="min-h-screen flex items-center justify-center p-5 bg-gradient-to-br from-brand-50 via-white to-emerald-50">
@@ -531,9 +525,9 @@ function SuccessScreen({
           수고하셨습니다 🙇‍♀️
         </p>
 
-        {cCount > 0 && (
+        {xCount > 0 && (
           <div className="mt-5 rounded-2xl bg-rose-50 border border-rose-200 p-4 text-sm text-rose-800 text-left">
-            <p className="font-bold mb-0.5">조치필요 {cCount}건</p>
+            <p className="font-bold mb-0.5">불량 {xCount}건</p>
             <p className="text-rose-700">
               사무실에 자동으로 알림이 전송되었습니다.
             </p>

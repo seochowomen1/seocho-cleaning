@@ -11,17 +11,17 @@ type Submission = {
   results: {
     itemId: string;
     itemName: string;
-    grade: "A" | "B" | "C";
+    grade: "O" | "X";
     note?: string;
     photoUrl?: string;
   }[];
-  hasC: boolean;
+  hasX: boolean;
 };
 
 type StatsData = {
   totalSubmissions: number;
   completionRate: number;
-  cCount: number;
+  xCount: number;
   submissions: Submission[];
 };
 
@@ -98,7 +98,7 @@ export default function WeeklyPrintPage() {
     );
   };
 
-  const cIssues = useMemo(() => {
+  const xIssues = useMemo(() => {
     if (!data) return [];
     const weekDates = week.map(fmt);
     const issues: {
@@ -113,7 +113,7 @@ export default function WeeklyPrintPage() {
       .filter((s) => weekDates.includes(s.date))
       .forEach((s) => {
         s.results.forEach((r) => {
-          if (r.grade === "C") {
+          if (r.grade === "X") {
             const d = new Date(s.date);
             issues.push({
               date: s.date,
@@ -274,7 +274,7 @@ export default function WeeklyPrintPage() {
                     >
                       {!sub ? (
                         <span className="text-ink-400">—</span>
-                      ) : sub.hasC ? (
+                      ) : sub.hasX ? (
                         <span className="text-rose-600">⚠</span>
                       ) : (
                         <span className="text-emerald-700">✓</span>
@@ -291,23 +291,23 @@ export default function WeeklyPrintPage() {
         </table>
 
         <p className="text-[11px] text-ink-700 mb-6">
-          ✓ 완료 (이상 없음) &nbsp;·&nbsp; ⚠ 완료 (조치필요 있음) &nbsp;·&nbsp;
+          ✓ 완료 (이상 없음) &nbsp;·&nbsp; ⚠ 완료 (불량 있음) &nbsp;·&nbsp;
           — 미제출
         </p>
 
-        {/* 조치필요 사항 */}
+        {/* 불량 사항 */}
         <section className="mb-8">
           <h2 className="font-bold text-base mb-3 border-b border-ink-300 pb-1">
-            조치필요 사항{" "}
-            <span className="text-ink-600 font-normal">({cIssues.length}건)</span>
+            불량 사항{" "}
+            <span className="text-ink-600 font-normal">({xIssues.length}건)</span>
           </h2>
-          {cIssues.length === 0 ? (
+          {xIssues.length === 0 ? (
             <p className="text-sm text-ink-600 italic py-2">
-              이번 주 조치필요 사항 없음
+              이번 주 불량 사항 없음
             </p>
           ) : (
             <ol className="space-y-2 text-sm">
-              {cIssues.map((c, i) => (
+              {xIssues.map((c, i) => (
                 <li key={i} className="leading-relaxed">
                   <span className="font-bold tabular-nums">{i + 1}.</span>{" "}
                   <span className="font-semibold">
@@ -366,30 +366,30 @@ function buildPreviewData(): StatsData {
       // 토요일은 빠짐, 일부 슬롯은 미제출 시뮬레이션
       if (d.getDay() === 6) return;
       if (dayOffset === 1 && i === 1) return; // 어제 점심 미제출
-      const hasC = (dayOffset + i) % 5 === 2;
+      const hasX = (dayOffset + i) % 5 === 2;
       submissions.push({
         date: dateStr,
         timeSlotLabel: slot.label,
         workerName: slot.worker,
         submittedAt: d.toISOString(),
-        results: hasC
+        results: hasX
           ? [
               {
                 itemId: "floor",
-                itemName: "바닥 상태",
-                grade: "C",
+                itemName: "강의실 내 바닥 점검",
+                grade: "X" as const,
                 note: "바닥에 이물질이 지워지지 않음",
               },
             ]
           : [],
-        hasC,
+        hasX,
       });
     });
   }
   return {
     totalSubmissions: submissions.length,
     completionRate: 95,
-    cCount: submissions.filter((s) => s.hasC).length,
+    xCount: submissions.filter((s) => s.hasX).length,
     submissions,
   };
 }

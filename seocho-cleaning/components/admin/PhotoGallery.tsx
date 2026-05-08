@@ -54,7 +54,7 @@ export default function PhotoGallery({ photos }: Props) {
         </div>
         <p className="text-base font-bold text-ink-800">사진이 없습니다</p>
         <p className="text-sm text-ink-500 mt-1">
-          조치필요 항목에 사진이 첨부되면 여기에 모입니다.
+          불량 항목에 사진이 첨부되면 여기에 모입니다.
         </p>
       </div>
     );
@@ -148,7 +148,7 @@ export default function PhotoGallery({ photos }: Props) {
                 />
                 <div className="absolute top-2 left-2">
                   <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-500 text-white tracking-wider shadow">
-                    조치필요
+                    불량
                   </span>
                 </div>
               </div>

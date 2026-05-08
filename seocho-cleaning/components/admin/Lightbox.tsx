@@ -132,7 +132,7 @@ export default function Lightbox({ photos, index, onClose, onIndexChange }: Prop
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center gap-2 mb-1.5">
             <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-500 tracking-wider">
-              조치필요
+              불량
             </span>
             <span className="text-base font-bold tracking-tight">
               {photo.itemName}

@@ -84,11 +84,10 @@ export const CHECKLIST_ITEMS: ChecklistItem[] = [
   },
 ];
 
-// 평가 등급 정의
+// 평가 등급 정의 (양호 O / 불량 X)
 export const GRADES: Grade[] = [
-  { id: "A", label: "양호",     color: "green",  description: "정리·청결 양호" },
-  { id: "B", label: "보통",     color: "amber",  description: "본인 정리 후 체크" },
-  { id: "C", label: "조치필요", color: "red",    description: "사무실 보고 필요" },
+  { id: "O", label: "양호",  color: "green", description: "정상" },
+  { id: "X", label: "불량",  color: "red",   description: "사무실 보고 필요" },
 ];
 
 // ============================================
@@ -122,12 +121,12 @@ export type ChecklistItem = {
   slots?: TimeSlot["id"][];
 };
 
-export type GradeId = "A" | "B" | "C";
+export type GradeId = "O" | "X";
 
 export type Grade = {
   id: GradeId;
   label: string;
-  color: "green" | "amber" | "red";
+  color: "green" | "red";
   description: string;
 };
 
