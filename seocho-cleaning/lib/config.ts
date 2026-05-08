@@ -26,54 +26,51 @@ export const TIME_SLOTS: TimeSlot[] = [
 export const CHECKLIST_ITEMS: ChecklistItem[] = [
   {
     id: "desk_chair",
-    name: "강의용 책상/의자 정리",
+    name: "강의용 책상/의자 배열 정리",
     floors: "4·5·6층",
-    questions: [
-      "책상은 열을 맞추고 의자는 깔끔하게 정리되었는가?",
-      "강사 테이블에 쓰레기는 없는가?",
-    ],
+    questions: [],
   },
   {
     id: "dust",
-    name: "이물질·먼지",
-    questions: ["책상·의자 위 먼지나 이물질이 제거되었는가?"],
+    name: "강의용 책상/의자 이물질 및 먼지 청소",
+    questions: [],
   },
   {
     id: "floor",
-    name: "바닥 상태",
-    questions: ["눈에 띄는 쓰레기나 오염이 없는가?"],
+    name: "강의실 내 바닥 점검",
+    questions: ["눈에 띄는 쓰레기 및 오염물 청소"],
   },
   {
     id: "ac_light",
-    name: "냉난방·전등",
-    questions: ["빈 강의실의 전등과 냉난방이 꺼져 있는가?"],
+    name: "빈 강의실 내 전등 및 냉난방기 OFF상태",
+    questions: [],
   },
   {
     id: "healing_room",
-    name: "힐링·마루강의실",
+    name: "힐링/마루강의실 거울 및 바닥 청소",
     floors: "7층",
-    questions: ["거울 및 바닥은 오염이 없는가?"],
+    questions: [],
   },
   {
     id: "hallway",
-    name: "복도·출입구",
-    questions: ["복도 및 출입구의 이물질이 없는가?"],
+    name: "복도 및 강의실 출입구 눈에 띄는 쓰레기 정리",
+    questions: [],
   },
   {
     id: "recycling",
-    name: "각층 분리수거함",
-    questions: ["분리수거함 위 쓰레기를 정리 했는가?"],
+    name: "각 층 분리수거함 위 눈에 띄는 쓰레기 정리",
+    questions: [],
   },
   {
     id: "water_cup",
-    name: "정수기 물컵",
-    questions: ["각 층 정수기 물컵이 채워져 있는가?"],
+    name: "각 층 정수기 물컵 점검 및 채우기",
+    questions: [],
   },
   {
     id: "plants",
     name: "화분 관수 및 상태",
     frequency: "weekly",
-    slots: ["morning"], // 09:00~12:00 시간대만
+    slots: ["morning"],
     questions: [
       "화분 관수는 했는가?",
       "잎 먼지제거 및 화분 받침대를 정리 했는가?",
@@ -83,6 +80,7 @@ export const CHECKLIST_ITEMS: ChecklistItem[] = [
     id: "terrace",
     name: "테라스 주변 정리",
     floors: "6층",
+    slots: ["morning"],
     questions: ["테라스 테이블 위 먼지나 이물질이 제거되었는가?"],
   },
 ];

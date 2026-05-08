@@ -1382,16 +1382,16 @@ function formatRelativeTime(d: Date): string {
 function generateMockData(days: number): StatsData {
   const today = new Date();
   const items: { id: string; name: string; slots?: string[] }[] = [
-    { id: "desk_chair", name: "강의용 책상/의자 정리" },
-    { id: "dust", name: "이물질·먼지" },
-    { id: "floor", name: "바닥 상태" },
-    { id: "ac_light", name: "냉난방·전등" },
-    { id: "healing_room", name: "힐링·마루강의실" },
-    { id: "hallway", name: "복도·출입구" },
-    { id: "recycling", name: "각층 분리수거함" },
-    { id: "water_cup", name: "정수기 물컵" },
+    { id: "desk_chair", name: "강의용 책상/의자 배열 정리" },
+    { id: "dust", name: "강의용 책상/의자 이물질 및 먼지 청소" },
+    { id: "floor", name: "강의실 내 바닥 점검" },
+    { id: "ac_light", name: "빈 강의실 내 전등 및 냉난방기 OFF상태" },
+    { id: "healing_room", name: "힐링/마루강의실 거울 및 바닥 청소" },
+    { id: "hallway", name: "복도 및 강의실 출입구 눈에 띄는 쓰레기 정리" },
+    { id: "recycling", name: "각 층 분리수거함 위 눈에 띄는 쓰레기 정리" },
+    { id: "water_cup", name: "각 층 정수기 물컵 점검 및 채우기" },
     { id: "plants", name: "화분 관수 및 상태", slots: ["morning"] },
-    { id: "terrace", name: "테라스 주변 정리" },
+    { id: "terrace", name: "테라스 주변 정리", slots: ["morning"] },
   ];
   const slots = [
     { id: "morning", label: "09:00 ~ 12:00", worker: "김성만", endHour: 12 },
@@ -1408,13 +1408,13 @@ function generateMockData(days: number): StatsData {
     return "A";
   };
   const cNotes: Record<string, string[]> = {
-    desk_chair: ["5층 상상1 책상 흐트러짐", "강사 테이블 종이컵 방치"],
-    dust: ["창틀 먼지 쌓임"],
-    floor: ["바닥에 이물질이 지워지지 않음", "물기 자국"],
+    desk_chair: ["5층 상상1 책상 배열 흐트러짐", "의자 정렬 미흡"],
+    dust: ["책상 위 먼지 쌓임", "의자 위 이물질"],
+    floor: ["바닥에 이물질 지워지지 않음", "물기 자국"],
     ac_light: ["빈 강의실 에어컨 꺼짐 안됨", "전등 1개 점등 그대로"],
-    healing_room: ["7층 거울 얼룩", "마루 오염"],
-    hallway: ["복도 종이박스 방치"],
-    recycling: ["분리수거함 위 종이쓰레기 쌓임", "분리수거 미흡"],
+    healing_room: ["7층 거울 얼룩", "마루 바닥 오염"],
+    hallway: ["복도 종이박스 방치", "출입구 쓰레기 발견"],
+    recycling: ["분리수거함 위 종이쓰레기 쌓임", "분리수거함 위 정리 미흡"],
     water_cup: ["3층 물컵 비어있음", "1층 물컵 부족"],
     plants: ["화분 관수 미실시", "화분 받침대 먼지 쌓임"],
     terrace: ["6층 테라스 테이블 먼지", "테라스 잔여 쓰레기"],
