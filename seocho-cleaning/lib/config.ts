@@ -69,7 +69,6 @@ export const CHECKLIST_ITEMS: ChecklistItem[] = [
   {
     id: "plants",
     name: "화분 관수 및 상태",
-    frequency: "weekly",
     slots: ["morning"],
     questions: [
       "화분 관수는 했는가?",
