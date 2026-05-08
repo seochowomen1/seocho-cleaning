@@ -114,3 +114,38 @@ a:focus-visible {
   outline: 2px solid #4f46e5;
   outline-offset: 2px;
 }
+
+/* ============================================
+   인쇄 전용 스타일 (A4 점검표 출력)
+   ============================================ */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 1.4cm;
+  }
+  html,
+  body {
+    background: white !important;
+    color: black !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  /* 인쇄 시 배경/그림자 모두 깔끔하게 */
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+  /* 페이지 전반 폰트 크기 약간 축소 (A4에 더 맞게) */
+  .print-root {
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  /* 표 안 페이지 분할 방지 */
+  table {
+    page-break-inside: avoid;
+  }
+  /* 서명 영역은 마지막 페이지 하단에 붙도록 */
+  .print-signature {
+    page-break-inside: avoid;
+  }
+}
