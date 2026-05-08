@@ -203,12 +203,9 @@ export default function WeeklyTemplatePage() {
                       <th
                         key={d.key}
                         colSpan={3}
-                        className="border-2 border-black p-1 bg-ink-100 text-center"
+                        className="border-2 border-black p-1.5 bg-ink-100 text-center"
                       >
                         <div className="text-[13px] font-bold">{d.label}</div>
-                        <div className="text-[9px] font-normal text-ink-600 mt-0.5">
-                          __ / __
-                        </div>
                       </th>
                     ))}
                   </tr>
@@ -273,12 +270,9 @@ export default function WeeklyTemplatePage() {
                     {WEEKDAYS.map((d) => (
                       <th
                         key={d.key}
-                        className="border-2 border-black p-1.5 bg-ink-100 text-center"
+                        className="border-2 border-black p-2 bg-ink-100 text-center"
                       >
                         <div className="text-[15px] font-bold">{d.label}</div>
-                        <div className="text-[10px] font-normal text-ink-600 mt-0.5">
-                          __/__
-                        </div>
                       </th>
                     ))}
                   </tr>
@@ -538,9 +532,8 @@ function buildExcelSingleHtml(
 ): string {
   const dayHeaderCells = WEEKDAYS.map(
     (d) =>
-      `<th style="border:1.5px solid #000;background:#e5e7eb;padding:8px;text-align:center;width:60px;">
-        <div style="font-size:13px;font-weight:bold;">${d.label}</div>
-        <div style="font-size:10px;color:#666;">__/__</div>
+      `<th style="border:1.5px solid #000;background:#e5e7eb;padding:10px;text-align:center;width:60px;">
+        <div style="font-size:14px;font-weight:bold;">${d.label}</div>
        </th>`
   ).join("");
 
