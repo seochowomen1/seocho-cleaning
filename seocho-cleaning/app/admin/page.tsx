@@ -461,12 +461,12 @@ export default function AdminPage() {
               target="_blank"
               rel="noopener"
               className="h-10 px-3 rounded-xl border border-ink-200 bg-white text-sm font-semibold hover:bg-ink-50 shadow-soft inline-flex items-center gap-1.5"
-              title="QR 입력이 어려울 때를 대비한 수기 백업 템플릿 (인쇄 또는 .xls 다운로드)"
+              title="월~금 5일치 수기 점검표 (가로 A4 1장)"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2M9 11h6m-6 4h6m-6 4h2" />
               </svg>
-              백업 양식
+              주간 양식
             </a>
             <button
               onClick={exportCSV}
